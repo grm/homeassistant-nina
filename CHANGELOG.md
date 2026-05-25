@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-25
+
 ### Changed
 
 - **Dashboard visual overhaul (Option 1 — tile grid).** Every section (Equipment / Camera / Mount / Guiding / Focuser / Sequence / Weather / Safety) now renders as a 2- or 3-column grid of native HA `tile` cards with adapted MDI icons and color coding instead of flat `entities` lists / glance grids. Color palette: cyan/light-blue/blue/amber for Camera, indigo/blue-grey/amber/green/orange for Mount, blue/amber for Guiding, purple/cyan for Focuser, green/red for Sequence actions, orange/light-blue/blue-grey/cyan/teal/indigo/deep-purple for Weather, green for Safety. Section headings (`heading` cards) introduce each block. Park/Unpark and Sequence Start/Stop use red/green color split. The previous `gauge` RA-error card is replaced by a tile (cleaner, less screen real estate); the history graph is preserved. The redundant `Trevinca …` prefix is dropped from labels (the dashboard title already names the instance).
