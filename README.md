@@ -4,6 +4,11 @@
 
 # NINA Polaris — Home Assistant Integration
 
+[![GitHub Release](https://img.shields.io/github/v/release/grm/homeassistant-nina?include_prereleases&style=flat-square)](https://github.com/grm/homeassistant-nina/releases)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
+[![License](https://img.shields.io/github/license/grm/homeassistant-nina?style=flat-square)](LICENSE)
+[![Changelog](https://img.shields.io/badge/changelog-keep%20a%20changelog-orange?style=flat-square)](CHANGELOG.md)
+
 Custom Home Assistant integration for [NINA (Nighttime Imaging 'N' Astronomy)](https://nighttime-imaging.eu/) via the [ninaAPI plugin](https://github.com/christian-photo/ninaAPI).
 
 Monitor your astrophotography sessions in real-time from Home Assistant.
