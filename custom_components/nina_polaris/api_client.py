@@ -162,6 +162,49 @@ class NinaApiClient:
     async def camera_warm(self, minutes: float = -1) -> Any:
         return await self._get(f"/equipment/camera/warm?minutes={minutes}")
 
+    # --- Connect / disconnect (one method per device) ---
+
+    async def device_connect(self, device: str) -> Any:
+        """Connect a NINA device.
+
+        ``device`` must be a NINA equipment slug:
+        ``camera``, ``mount``, ``focuser``, ``guider``, ``filterwheel``,
+        ``dome``, ``rotator``, ``flatdevice``, ``weather``, ``safetymonitor``,
+        ``switch``.
+        """
+        return await self._get(f"/equipment/{device}/connect")
+
+    async def device_disconnect(self, device: str) -> Any:
+        """Disconnect a NINA device. See :meth:`device_connect` for slugs."""
+        return await self._get(f"/equipment/{device}/disconnect")
+
+    # --- Dome actions ---
+
+    async def dome_open(self) -> Any:
+        return await self._get("/equipment/dome/open")
+
+    async def dome_close(self) -> Any:
+        return await self._get("/equipment/dome/close")
+
+    async def dome_park(self) -> Any:
+        return await self._get("/equipment/dome/park")
+
+    async def dome_stop(self) -> Any:
+        return await self._get("/equipment/dome/stop")
+
+    # --- Guider actions ---
+
+    async def guider_start(self) -> Any:
+        return await self._get("/equipment/guider/start")
+
+    async def guider_stop(self) -> Any:
+        return await self._get("/equipment/guider/stop")
+
+    # --- Camera additional actions ---
+
+    async def camera_abort_exposure(self) -> Any:
+        return await self._get("/equipment/camera/abort-exposure")
+
     async def close(self) -> None:
         if self._session and not self._session.closed:
             await self._session.close()
