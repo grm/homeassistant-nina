@@ -102,8 +102,6 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         event_type = event.get("Event", "unknown")
         _LOGGER.debug("WebSocket event received: %s", event_type)
 
-        # On IMAGE-SAVE, NINA appends a new image to the history.
-        # Bump latest_image_index so the camera entity refreshes.
         if event_type == "IMAGE-SAVE":
             if self.latest_image_index is None:
                 self.latest_image_index = 0
@@ -111,4 +109,4 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.latest_image_index += 1
             _LOGGER.debug("New image saved, latest_image_index=%s", self.latest_image_index)
 
-        self.async_set_updated_data({**self.data, "last_event": event} if self.data else {"last_event": event})
+        self.hass.async_create_task(self.async_request_refresh())
