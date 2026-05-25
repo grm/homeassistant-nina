@@ -8,8 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .api_client import NinaApiClient
-from .const import CONF_PORT
+from .const import CONF_PORT, DOMAIN
 from .coordinator import NinaCoordinator
+from .nina_lovelace import async_register_dashboard, async_unregister_dashboard
 from .services import async_setup_services
 from .websocket import NinaWebSocket
 
@@ -47,6 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
 
+    # Register/refresh the auto-generated NINA Polaris dashboard. Tracked once
+    # per HA process via a sentinel so multiple config entries don't try to
+    # register the same panel twice.
+    domain_state = hass.data.setdefault(DOMAIN, {})
+    if not domain_state.get("dashboard_registered"):
+        async_register_dashboard(hass)
+        domain_state["dashboard_registered"] = True
+
     entry.async_on_unload(websocket.async_disconnect)
 
     return True
@@ -54,4 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # If this was the last NINA entry, drop the dashboard panel too.
+    remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
+    if not remaining:
+        async_unregister_dashboard(hass)
+        hass.data.get(DOMAIN, {}).pop("dashboard_registered", None)
+    return unloaded

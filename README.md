@@ -18,7 +18,7 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 - **Live image preview** — the latest frame captured by NINA is exposed as a Camera entity, proxied through Home Assistant (no need for the browser to reach NINA directly, works fine through Nabu Casa)
 - **Action buttons** — park / unpark mount, start / stop sequence, run autofocus, plate solve
 - **Toggleable controls** — camera cooler (on / off), mount tracking (sidereal / stopped)
-- **One-click dashboard** — the `nina_polaris.generate_dashboard` service builds a complete Lovelace dashboard from your registry (no custom cards needed)
+- **Auto-generated dashboard** — a NINA Polaris dashboard appears in your sidebar automatically, rebuilt from your registry on every page load (no service to run, no JS, no custom cards)
 - WebSocket push for instant event updates + REST polling fallback
 - Multi-instance support (multiple NINA setups, each gets its own dashboard view)
 - French and English translations
@@ -158,43 +158,29 @@ automation:
 
 ## Dashboard
 
-NINA Polaris generates a complete Lovelace dashboard for you with a **single service call**. No JS, no custom cards required — every card is built into Home Assistant Core.
+NINA Polaris **automatically registers a Lovelace dashboard** as soon as the integration is set up. No service to call, no JS, no custom cards — the dashboard appears in your sidebar named **NINA Polaris** with one view per configured NINA instance.
 
-### One-click setup
+The dashboard is **regenerated on every page load** from your current entity registry, so adding/removing entities or NINA instances is reflected immediately — just reopen the dashboard.
 
-1. Open **Developer Tools → Actions** (or **Services**)
-2. Pick `nina_polaris.generate_dashboard`
-3. Click **Perform action**
+> Pattern: same approach as the built-in **Energy** and **Map** dashboards. Implemented as a `LovelaceConfig` subclass that rebuilds itself on every `async_load()`.
 
-A dashboard called **NINA Polaris** appears in your sidebar with one view per configured instance. Cards: equipment chips, latest camera image, mount RA/DEC, guiding history graph, focuser, sequence progress, weather, safety. You can edit it like any normal dashboard afterwards.
+### Cards in each view
 
-Run the service again any time to rebuild after adding a NINA instance or new entities. It overwrites the dashboard but you can change the URL path to keep multiple variants.
+- Equipment glance (camera/mount/focuser/guider/dome connection)
+- Latest camera image
+- Mount RA/DEC + tracking actions
+- Guider RMS history graph
+- Focuser position + autofocus button
+- Sequence progress + start/stop
+- Weather + safety binary sensors
 
-### Service options
+### Optional: Mushroom chips
 
-| Field | Default | Description |
-|---|---|---|
-| `url_path` | `nina-polaris` | URL slug for the dashboard |
-| `title` | `NINA Polaris` | Sidebar title |
-| `use_mushroom` | `false` | Replace equipment glance card with `mushroom-chips-card` (requires Mushroom from HACS) |
+If you want fancier equipment chips, install **Mushroom** from HACS → Frontend. The dashboard does NOT depend on Mushroom; it uses native cards by default. (Future option for swapping to Mushroom is planned.)
 
-Example (YAML):
+### Read-only
 
-```yaml
-action: nina_polaris.generate_dashboard
-data:
-  use_mushroom: true
-```
-
-### Optional: prettier cards
-
-The default output uses 100% native HA cards. If you want extra polish, install from HACS → Frontend:
-
-- **Mushroom** — pretty chips for equipment (set `use_mushroom: true`)
-
-### YAML mode
-
-The service requires Lovelace **storage** mode (the default). If you run `lovelace: mode: yaml`, the service refuses with a clear error — manually copy a dashboard YAML instead.
+The dashboard is generated, so editing it via the Raw Configuration Editor is not supported (changes would be wiped on next page load). If you want a fully editable dashboard, copy the generated YAML into a new dashboard you create yourself in Settings → Dashboards.
 
 ## Troubleshooting
 

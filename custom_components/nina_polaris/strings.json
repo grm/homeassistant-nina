@@ -285,24 +285,6 @@
           "description": "Target instance."
         }
       }
-    },
-    "generate_dashboard": {
-      "name": "Generate dashboard",
-      "description": "Create or refresh a Lovelace dashboard with one view per NINA Polaris instance.",
-      "fields": {
-        "url_path": {
-          "name": "URL path",
-          "description": "Dashboard URL slug."
-        },
-        "title": {
-          "name": "Title",
-          "description": "Sidebar title."
-        },
-        "use_mushroom": {
-          "name": "Use Mushroom cards",
-          "description": "Render chips with Mushroom (HACS)."
-        }
-      }
     }
   }
 }

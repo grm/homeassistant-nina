@@ -285,24 +285,6 @@
           "description": "Instance ciblée."
         }
       }
-    },
-    "generate_dashboard": {
-      "name": "Générer le tableau de bord",
-      "description": "Crée ou rafraîchit un tableau de bord Lovelace avec une vue par instance NINA Polaris.",
-      "fields": {
-        "url_path": {
-          "name": "Chemin URL",
-          "description": "Slug d'URL du tableau de bord."
-        },
-        "title": {
-          "name": "Titre",
-          "description": "Titre dans la barre latérale."
-        },
-        "use_mushroom": {
-          "name": "Cartes Mushroom",
-          "description": "Affiche les chips avec Mushroom (HACS)."
-        }
-      }
     }
   }
 }
