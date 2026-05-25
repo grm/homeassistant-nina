@@ -1,4 +1,8 @@
-# NINA Polaris - Home Assistant Integration
+<p align="center">
+  <img src=".github/logo.png" alt="NINA Polaris" width="320">
+</p>
+
+# NINA Polaris — Home Assistant Integration
 
 Custom Home Assistant integration for [NINA (Nighttime Imaging 'N' Astronomy)](https://nighttime-imaging.eu/) via the [ninaAPI plugin](https://github.com/christian-photo/ninaAPI).
 
@@ -118,6 +122,39 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 |--------|-------------|
 | Camera cooler | ON cools the camera (default target -10 °C, override via the entry option `cooler_target_temperature`). OFF triggers `/equipment/camera/warm`. |
 | Mount tracking | ON sets sidereal tracking (mode 0). OFF stops tracking (mode 4). |
+
+## Services
+
+In addition to the action buttons (which run with sensible defaults), the integration exposes parameterized services callable from automations, scripts, and the developer tools panel.
+
+| Service | Description | Notable parameters |
+| --- | --- | --- |
+| `nina_polaris.cool_camera` | Ramp the camera cooler down | `temperature` (°C), `duration` (min) |
+| `nina_polaris.warm_camera` | Warm up gracefully | `duration` (min) |
+| `nina_polaris.set_tracking` | Switch tracking rate | `mode` (`sidereal`, `lunar`, `solar`, `king`, `stopped`) |
+| `nina_polaris.start_sequence` | Start the active sequence | `skip_validation` (bool) |
+| `nina_polaris.stop_sequence` | Stop the running sequence | – |
+| `nina_polaris.park_mount` / `nina_polaris.unpark_mount` | Park / unpark the mount | – |
+| `nina_polaris.start_autofocus` / `nina_polaris.cancel_autofocus` | Run / cancel autofocus | – |
+| `nina_polaris.plate_solve` | Capture and platesolve | – |
+
+All services accept an optional `config_entry` parameter (NINA instance selector). When you only have one NINA Polaris instance configured, you can omit it.
+
+Example — automation that cools the camera to -20 °C at sunset:
+
+```yaml
+automation:
+  - alias: Pre-cool camera before session
+    trigger:
+      - platform: sun
+        event: sunset
+        offset: "-00:30:00"
+    action:
+      - service: nina_polaris.cool_camera
+        data:
+          temperature: -20
+          duration: 10
+```
 
 ## Dashboard
 

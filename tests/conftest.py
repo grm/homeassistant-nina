@@ -3,6 +3,14 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable loading of custom_components in every test."""
+    yield
+
 
 MOCK_EQUIPMENT_DATA = {
     "Camera": {
@@ -108,3 +116,36 @@ def mock_websocket():
     ws.async_disconnect = AsyncMock()
     ws.set_callback = MagicMock()
     return ws
+
+
+@pytest.fixture
+async def mock_config_entry(hass, mock_nina_api, mock_websocket):
+    """Set up a fully loaded NINA Polaris config entry with mocked deps.
+
+    Tests can read coordinator + api via `entry.runtime_data` and
+    `entry.runtime_data.api`.
+    """
+    from custom_components.nina_polaris.const import CONF_PORT, DOMAIN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "192.0.2.10", CONF_PORT: 1888},
+        title="NINA Polaris",
+        unique_id="test-nina",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        _patch("custom_components.nina_polaris.NinaApiClient", return_value=mock_nina_api),
+        _patch("custom_components.nina_polaris.NinaWebSocket", return_value=mock_websocket),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
+
+
+def _patch(target, **kwargs):
+    from unittest.mock import patch
+
+    return patch(target, **kwargs)

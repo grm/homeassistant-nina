@@ -1,5 +1,6 @@
 """NINA Polaris integration for Home Assistant."""
 
+from contextlib import suppress
 from pathlib import Path
 
 from homeassistant.components.frontend import add_extra_js_url
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from .api_client import NinaApiClient
 from .const import CONF_PORT, DOMAIN
 from .coordinator import NinaCoordinator
+from .services import async_setup_services
 from .websocket import NinaWebSocket
 
 PLATFORMS = [
@@ -37,10 +39,11 @@ async def _async_register_dashboard_strategy(hass: HomeAssistant) -> None:
     if hass.data.get(DASHBOARD_REGISTERED_KEY):
         return
     js_path = Path(__file__).parent / "dashboard" / "nina-polaris.js"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(DASHBOARD_URL, str(js_path), False)]
-    )
-    add_extra_js_url(hass, DASHBOARD_URL)
+    await hass.http.async_register_static_paths([StaticPathConfig(DASHBOARD_URL, str(js_path), False)])
+    # frontend integration not yet set up (e.g. in tests). The static path
+    # is still registered; users can add the resource manually if needed.
+    with suppress(KeyError):
+        add_extra_js_url(hass, DASHBOARD_URL)
     hass.data[DASHBOARD_REGISTERED_KEY] = True
 
 
@@ -59,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await _async_register_dashboard_strategy(hass)
+    async_setup_services(hass)
 
     entry.async_on_unload(websocket.async_disconnect)
 

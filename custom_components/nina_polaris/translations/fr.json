@@ -23,58 +23,268 @@
   },
   "entity": {
     "sensor": {
-      "camera_temperature": { "name": "Température caméra" },
-      "camera_cooler_power": { "name": "Puissance refroidissement caméra" },
-      "guider_ra_distance": { "name": "Distance guidage AD" },
-      "guider_dec_distance": { "name": "Distance guidage Déc" },
-      "focuser_position": { "name": "Position focuser" },
-      "focuser_temperature": { "name": "Température focuser" },
-      "mount_ra": { "name": "Ascension droite monture" },
-      "mount_dec": { "name": "Déclinaison monture" },
-      "mount_altitude": { "name": "Altitude monture" },
-      "mount_azimuth": { "name": "Azimut monture" },
-      "mount_time_to_flip": { "name": "Temps avant retournement méridien" },
-      "sequence_target": { "name": "Cible actuelle de la séquence" },
-      "weather_temperature": { "name": "Température extérieure" },
-      "weather_humidity": { "name": "Humidité" },
-      "weather_pressure": { "name": "Pression atmosphérique" },
-      "weather_dewpoint": { "name": "Point de rosée" },
-      "weather_wind_speed": { "name": "Vitesse du vent" },
-      "weather_sky_quality": { "name": "Qualité du ciel (SQM)" },
-      "weather_sky_temperature": { "name": "Température du ciel" }
+      "camera_temperature": {
+        "name": "Température caméra"
+      },
+      "camera_cooler_power": {
+        "name": "Puissance refroidissement caméra"
+      },
+      "guider_ra_distance": {
+        "name": "Distance guidage AD"
+      },
+      "guider_dec_distance": {
+        "name": "Distance guidage Déc"
+      },
+      "focuser_position": {
+        "name": "Position focuser"
+      },
+      "focuser_temperature": {
+        "name": "Température focuser"
+      },
+      "mount_ra": {
+        "name": "Ascension droite monture"
+      },
+      "mount_dec": {
+        "name": "Déclinaison monture"
+      },
+      "mount_altitude": {
+        "name": "Altitude monture"
+      },
+      "mount_azimuth": {
+        "name": "Azimut monture"
+      },
+      "mount_time_to_flip": {
+        "name": "Temps avant retournement méridien"
+      },
+      "sequence_target": {
+        "name": "Cible actuelle de la séquence"
+      },
+      "weather_temperature": {
+        "name": "Température extérieure"
+      },
+      "weather_humidity": {
+        "name": "Humidité"
+      },
+      "weather_pressure": {
+        "name": "Pression atmosphérique"
+      },
+      "weather_dewpoint": {
+        "name": "Point de rosée"
+      },
+      "weather_wind_speed": {
+        "name": "Vitesse du vent"
+      },
+      "weather_sky_quality": {
+        "name": "Qualité du ciel (SQM)"
+      },
+      "weather_sky_temperature": {
+        "name": "Température du ciel"
+      }
     },
     "binary_sensor": {
-      "camera_connected": { "name": "Caméra connectée" },
-      "mount_connected": { "name": "Monture connectée" },
-      "guider_connected": { "name": "Guideur connecté" },
-      "focuser_connected": { "name": "Focuser connecté" },
-      "filterwheel_connected": { "name": "Roue à filtres connectée" },
-      "dome_connected": { "name": "Dôme connecté" },
-      "rotator_connected": { "name": "Rotateur connecté" },
-      "weather_connected": { "name": "Station météo connectée" },
-      "safety_monitor_connected": { "name": "Moniteur de sécurité connecté" },
-      "safety_is_safe": { "name": "Observatoire sécurisé" },
-      "sequence_running": { "name": "Séquence en cours" },
-      "mount_tracking": { "name": "Suivi monture actif" },
-      "mount_slewing": { "name": "Monture en déplacement" },
-      "mount_at_park": { "name": "Monture parquée" },
-      "camera_exposing": { "name": "Caméra en exposition" },
-      "camera_cooler_on": { "name": "Refroidissement caméra actif" }
+      "camera_connected": {
+        "name": "Caméra connectée"
+      },
+      "mount_connected": {
+        "name": "Monture connectée"
+      },
+      "guider_connected": {
+        "name": "Guideur connecté"
+      },
+      "focuser_connected": {
+        "name": "Focuser connecté"
+      },
+      "filterwheel_connected": {
+        "name": "Roue à filtres connectée"
+      },
+      "dome_connected": {
+        "name": "Dôme connecté"
+      },
+      "rotator_connected": {
+        "name": "Rotateur connecté"
+      },
+      "weather_connected": {
+        "name": "Station météo connectée"
+      },
+      "safety_monitor_connected": {
+        "name": "Moniteur de sécurité connecté"
+      },
+      "safety_is_safe": {
+        "name": "Observatoire sécurisé"
+      },
+      "sequence_running": {
+        "name": "Séquence en cours"
+      },
+      "mount_tracking": {
+        "name": "Suivi monture actif"
+      },
+      "mount_slewing": {
+        "name": "Monture en déplacement"
+      },
+      "mount_at_park": {
+        "name": "Monture parquée"
+      },
+      "camera_exposing": {
+        "name": "Caméra en exposition"
+      },
+      "camera_cooler_on": {
+        "name": "Refroidissement caméra actif"
+      }
     },
     "camera": {
-      "latest_image": { "name": "Dernière image" }
+      "latest_image": {
+        "name": "Dernière image"
+      }
     },
     "button": {
-      "mount_park": { "name": "Parquer la monture" },
-      "mount_unpark": { "name": "Déparquer la monture" },
-      "sequence_start": { "name": "Lancer la séquence" },
-      "sequence_stop": { "name": "Arrêter la séquence" },
-      "autofocus_start": { "name": "Lancer l'autofocus" },
-      "plate_solve": { "name": "Plate solve" }
+      "mount_park": {
+        "name": "Parquer la monture"
+      },
+      "mount_unpark": {
+        "name": "Déparquer la monture"
+      },
+      "sequence_start": {
+        "name": "Lancer la séquence"
+      },
+      "sequence_stop": {
+        "name": "Arrêter la séquence"
+      },
+      "autofocus_start": {
+        "name": "Lancer l'autofocus"
+      },
+      "plate_solve": {
+        "name": "Plate solve"
+      }
     },
     "switch": {
-      "camera_cooler": { "name": "Refroidissement caméra" },
-      "mount_tracking": { "name": "Suivi monture" }
+      "camera_cooler": {
+        "name": "Refroidissement caméra"
+      },
+      "mount_tracking": {
+        "name": "Suivi monture"
+      }
+    }
+  },
+  "services": {
+    "cool_camera": {
+      "name": "Refroidir la caméra",
+      "description": "Refroidir la caméra jusqu'à une température cible.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance NINA Polaris ciblée."
+        },
+        "temperature": {
+          "name": "Température cible",
+          "description": "Température cible du capteur (°C)."
+        },
+        "duration": {
+          "name": "Durée de refroidissement",
+          "description": "Minutes pour atteindre la cible (-1 = profil NINA)."
+        }
+      }
+    },
+    "warm_camera": {
+      "name": "Réchauffer la caméra",
+      "description": "Réchauffer la caméra en douceur.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance NINA Polaris ciblée."
+        },
+        "duration": {
+          "name": "Durée de réchauffement",
+          "description": "Minutes pour réchauffer (-1 = profil NINA)."
+        }
+      }
+    },
+    "set_tracking": {
+      "name": "Définir le mode de suivi",
+      "description": "Changer le mode de suivi de la monture.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance NINA Polaris ciblée."
+        },
+        "mode": {
+          "name": "Mode de suivi",
+          "description": "sidereal, lunar, solar, king ou stopped."
+        }
+      }
+    },
+    "start_sequence": {
+      "name": "Démarrer la séquence",
+      "description": "Démarrer la séquence active de NINA.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance NINA Polaris ciblée."
+        },
+        "skip_validation": {
+          "name": "Ignorer la validation",
+          "description": "Sauter la validation pré-séquence."
+        }
+      }
+    },
+    "stop_sequence": {
+      "name": "Arrêter la séquence",
+      "description": "Arrêter la séquence en cours.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
+    },
+    "park_mount": {
+      "name": "Parquer la monture",
+      "description": "Parquer la monture.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
+    },
+    "unpark_mount": {
+      "name": "Déparquer la monture",
+      "description": "Déparquer la monture.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
+    },
+    "start_autofocus": {
+      "name": "Démarrer l'autofocus",
+      "description": "Lancer une routine d'autofocus.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
+    },
+    "cancel_autofocus": {
+      "name": "Annuler l'autofocus",
+      "description": "Annuler un autofocus en cours.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
+    },
+    "plate_solve": {
+      "name": "Plate solve",
+      "description": "Capturer et plate-solver une image.",
+      "fields": {
+        "config_entry": {
+          "name": "Instance NINA",
+          "description": "Instance ciblée."
+        }
+      }
     }
   }
 }

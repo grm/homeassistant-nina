@@ -1,0 +1,164 @@
+cool_camera:
+  name: Cool camera
+  description: >-
+    Ramp the camera cooler down to a target temperature over an optional
+    duration.
+  fields:
+    config_entry:
+      name: NINA instance
+      description: Target NINA Polaris instance (omit if only one is configured).
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+    temperature:
+      name: Target temperature
+      description: Target sensor temperature (°C).
+      required: false
+      default: -10
+      selector:
+        number:
+          min: -50
+          max: 30
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: box
+    duration:
+      name: Cooling duration
+      description: >-
+        Minutes to ramp down (-1 = NINA default profile setting).
+      required: false
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 120
+          step: 1
+          unit_of_measurement: min
+          mode: box
+
+warm_camera:
+  name: Warm camera
+  description: Warm the camera up gracefully.
+  fields:
+    config_entry:
+      name: NINA instance
+      description: Target NINA Polaris instance.
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+    duration:
+      name: Warming duration
+      description: Minutes to ramp up (-1 = NINA default profile setting).
+      required: false
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 120
+          step: 1
+          unit_of_measurement: min
+          mode: box
+
+set_tracking:
+  name: Set mount tracking mode
+  description: Switch the mount tracking rate.
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+    mode:
+      name: Tracking mode
+      required: true
+      selector:
+        select:
+          options:
+            - sidereal
+            - lunar
+            - solar
+            - king
+            - stopped
+
+start_sequence:
+  name: Start sequence
+  description: Start the active NINA sequence.
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+    skip_validation:
+      name: Skip validation
+      description: Bypass the NINA pre-sequence validation step.
+      required: false
+      default: false
+      selector:
+        boolean:
+
+stop_sequence:
+  name: Stop sequence
+  description: Stop the running sequence.
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+
+park_mount:
+  name: Park mount
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+
+unpark_mount:
+  name: Unpark mount
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+
+start_autofocus:
+  name: Start autofocus
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+
+cancel_autofocus:
+  name: Cancel autofocus
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
+
+plate_solve:
+  name: Plate solve
+  description: Capture an image and platesolve it.
+  fields:
+    config_entry:
+      name: NINA instance
+      required: false
+      selector:
+        config_entry:
+          integration: nina_polaris
