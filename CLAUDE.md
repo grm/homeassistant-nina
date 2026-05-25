@@ -87,3 +87,17 @@ python -m script.hassfest validate --integration-path custom_components/nina_pol
 - Branch from `main`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`
 - PR per feature/fix
+
+## Release Workflow
+
+**Never run a release on your own.** Releases are user-triggered only.
+
+After every functional change (feature, fix, breaking change, removal), add an entry under the `## [Unreleased]` section of `CHANGELOG.md` in the appropriate sub-section (`Breaking Changes`, `Added`, `Fixed`, `Removed`). Reference issues / PRs with `(#N)` when relevant. See `.claude/commands/changelog.md` for the format.
+
+Do **not**:
+- Bump `manifest.json` version
+- Create git tags
+- Run `gh release create`
+- Move `[Unreleased]` entries under a versioned section
+
+…unless the user explicitly says "release", "release stable", "release beta", or otherwise asks for a release. The `/release` command in `.claude/commands/release.md` is the only path that performs the version bump + tag + GitHub Release; it's invoked manually.
