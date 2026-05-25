@@ -9,7 +9,7 @@ from .const import CONF_PORT
 from .coordinator import NinaCoordinator
 from .websocket import NinaWebSocket
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA, Platform.BUTTON]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.CAMERA, Platform.BUTTON, Platform.SWITCH]
 
 type NinaConfigEntry = ConfigEntry[NinaCoordinator]
 

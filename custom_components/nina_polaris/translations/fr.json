@@ -71,6 +71,10 @@
       "sequence_stop": { "name": "Arrêter la séquence" },
       "autofocus_start": { "name": "Lancer l'autofocus" },
       "plate_solve": { "name": "Plate solve" }
+    },
+    "switch": {
+      "camera_cooler": { "name": "Refroidissement caméra" },
+      "mount_tracking": { "name": "Suivi monture" }
     }
   }
 }
