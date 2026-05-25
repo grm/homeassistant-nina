@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **README**: add a dedicated *NINA setup (Advanced API plugin)* section walking through the plugin's *Options* panel: `API Enabled` (single toggle that turns on the v2 REST + websocket endpoints), `Create Thumbnails` (required for the live image preview), `API Port` 1888, CORS header, firewall, and `curl /v2/api/version` connectivity check. The Configuration and Troubleshooting sections now link back to it.
+
 ## [0.7.1] - 2026-05-25
 
 ### Fixed

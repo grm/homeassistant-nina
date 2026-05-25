@@ -38,8 +38,43 @@ Long imaging nights, longer debugging nights — if this integration keeps **you
 
 - Home Assistant 2024.1.0+
 - HACS 2.0.0+
-- NINA with the [ninaAPI plugin](https://github.com/christian-photo/ninaAPI) installed and enabled
+- NINA with the [Advanced API plugin](https://github.com/christian-photo/ninaAPI) installed and enabled
 - Network access from Home Assistant to the NINA machine on port 1888 (default)
+
+## NINA setup (Advanced API plugin)
+
+The integration talks to NINA via the **Advanced API** plugin. It must be installed and configured on the NINA machine before adding the integration in Home Assistant.
+
+1. **Install the plugin**
+   - In NINA: **Plugins → Available plugins**
+   - Search for **Advanced API**
+   - Click **Install**, then restart NINA
+
+2. **Configure the plugin**
+   - Open **Plugins → Advanced API → Options**
+   - **API Enabled**: `ON` — turns on the HTTP server, the v2 REST API and the WebSocket endpoint that the integration relies on (single toggle, no separate switches for v2 / websockets)
+   - **Create Thumbnails**: `ON` — required for the *Latest image* camera entity to display the most recent frame in the dashboard
+   - **API Port**: `1888` — keep the default unless you have a port conflict; if you change it, use the same value in the Home Assistant config flow
+   - **Profile Dependent Port?**: `OFF` — leave off so the port stays stable across NINA profile switches
+   - **⚠ Use Access-Control-Allow-Origin Header ⚠**: `ON` — required so Home Assistant can fetch the latest image (CORS). Without it the camera entity in the dashboard stays blank
+   - The plugin currently has **no authentication / API key**: the integration expects the API to be reachable without credentials on a trusted local network
+
+3. **Allow it through the firewall**
+   - On Windows the first time NINA starts the API server it will prompt for a Windows Firewall exception — accept it for *Private* networks
+   - In the plugin's **Options** panel, the *Network addresses* section gives you the URLs you can hit:
+     ```
+     http://localhost:1888/v2/api
+     http://<lan-ip>:1888/v2/api
+     http://<hostname>:1888/v2/api
+     ```
+   - Verify Home Assistant can reach NINA from a shell on the HA host:
+     ```bash
+     curl http://<nina-host>:1888/v2/api/version
+     ```
+     You should get a JSON response with the API version. If you get connection refused or timeout, double-check **API Enabled** is on and that the firewall rule was accepted.
+
+4. **Keep NINA running during sessions**
+   - The API server only runs while NINA is open. If you close NINA, the integration entities go *unavailable* — this is expected. Restart NINA and the integration recovers automatically (the websocket reconnects on its own).
 
 ## Installation
 
@@ -57,6 +92,8 @@ Long imaging nights, longer debugging nights — if this integration keeps **you
 2. Restart Home Assistant
 
 ## Configuration
+
+> Make sure NINA is running with the Advanced API plugin enabled (see [NINA setup](#nina-setup-advanced-api-plugin) above) before continuing.
 
 1. Go to **Settings > Devices & Services > Add Integration**
 2. Search for "NINA Polaris"
@@ -216,7 +253,7 @@ The dashboard is generated, so editing it via the Raw Configuration Editor is no
 
 ## Troubleshooting
 
-1. **Cannot connect**: Verify NINA is running with the ninaAPI plugin enabled. Test with:
+1. **Cannot connect**: Verify NINA is running with the **Advanced API** plugin enabled (see [NINA setup](#nina-setup-advanced-api-plugin)). Test with:
    ```
    curl http://<nina-host>:1888/v2/api/version
    ```
