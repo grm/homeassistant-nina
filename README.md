@@ -11,8 +11,12 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 - Guiding metrics (RA/Dec distance)
 - Weather data (temperature, humidity, pressure, dew point, wind, sky quality, sky temperature)
 - Safety monitor status
+- **Live image preview** — the latest frame captured by NINA is exposed as a Camera entity, proxied through Home Assistant (no need for the browser to reach NINA directly, works fine through Nabu Casa)
+- **Action buttons** — park / unpark mount, start / stop sequence, run autofocus, plate solve
+- **Toggleable controls** — camera cooler (on / off), mount tracking (sidereal / stopped)
+- **One-click dashboard** — bundled Lovelace strategy `custom:nina-polaris` auto-generates a complete view per NINA instance
 - WebSocket push for instant event updates + REST polling fallback
-- Multi-instance support (multiple NINA setups)
+- Multi-instance support (multiple NINA setups, each gets its own dashboard view)
 - French and English translations
 
 ## Requirements
@@ -90,6 +94,75 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 | Mount parked | Mount is in park position |
 | Camera exposing | Camera is currently exposing |
 | Camera cooler on | Camera cooler is active |
+
+### Camera
+
+| Entity | Description |
+|--------|-------------|
+| Latest image | Last frame captured by NINA, refreshed automatically on every `IMAGE-SAVE` event. Bytes are proxied through Home Assistant — the browser never needs to talk to the NINA host directly, so the preview works through Nabu Casa and any reverse proxy. |
+
+### Buttons
+
+| Entity | Description |
+|--------|-------------|
+| Park mount | Calls `/equipment/mount/park`. Available when the mount is connected. |
+| Unpark mount | Calls `/equipment/mount/unpark`. Available when the mount is connected. |
+| Start sequence | Calls `/sequence/start`. Available only when no sequence is running. |
+| Stop sequence | Calls `/sequence/stop`. Available only when a sequence is running. |
+| Run autofocus | Calls `/equipment/focuser/auto-focus`. Available when the focuser is connected. |
+| Plate solve | Calls `/equipment/camera/capture?solve=true&omitImage=true`. Available when the camera is connected. |
+
+### Switches
+
+| Entity | Description |
+|--------|-------------|
+| Camera cooler | ON cools the camera (default target -10 °C, override via the entry option `cooler_target_temperature`). OFF triggers `/equipment/camera/warm`. |
+| Mount tracking | ON sets sidereal tracking (mode 0). OFF stops tracking (mode 4). |
+
+## Dashboard
+
+NINA Polaris ships with a Lovelace **strategy** (the same pattern Plex, Spotify, and Music Assistant use): the integration registers a JS module on first setup, so once installed you only need to point a dashboard at it.
+
+### Recommended cards (HACS)
+
+To get the same look as the screenshots, install these from HACS → Frontend:
+
+- **Mushroom** — for the chip / button cards
+- **apexcharts-card** — for the guider error plot
+
+The strategy still works without them — sections that depend on a missing card are simply omitted.
+
+### Add the dashboard
+
+1. Go to **Settings → Dashboards → Add Dashboard → New dashboard from scratch**
+2. Open the new dashboard, click the three-dot menu → **Edit dashboard** → **Raw configuration editor**
+3. Replace the contents with:
+
+   ```yaml
+   strategy:
+     type: custom:nina-polaris
+   ```
+
+4. Save. Each NINA instance you have configured will appear as its own view.
+
+### Strategy options
+
+```yaml
+strategy:
+  type: custom:nina-polaris
+  use_mushroom: true   # default true — set false to fall back to native cards
+  show_charts: true    # default true — set false to skip the apexcharts plot
+  instance: <entry_id> # optional — render a single instance instead of all
+```
+
+You can also use the strategy at the **view** level inside an existing dashboard:
+
+```yaml
+views:
+  - title: NINA
+    strategy:
+      type: custom:nina-polaris
+```
 
 ## Troubleshooting
 
