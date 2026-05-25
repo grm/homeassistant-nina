@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-25
+
 ### Added
 
 - **Optional monitoring camera tile on the dashboard**. Configure → NINA Polaris → ⋮ → Configure → pick any HA camera entity (e.g. an RTSP rig cam set up via the built-in **Generic Camera** integration). The camera renders as a `picture-entity` card at the top of the Equipment column so you can keep an eye on the telescope while reviewing equipment status. Leave the field empty to remove the tile.
