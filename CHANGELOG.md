@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-25
+
+### Added
+
+- **Per-instance dashboards** — each configured NINA instance now gets its own dedicated entry in the Home Assistant sidebar, named after the instance (e.g. *Trevinca*, *TEC140*, *FRA400*). Adding or removing a NINA instance updates the sidebar automatically; no service to call, no JS, no custom cards.
+- The dashboard URL is human-readable and includes the instance slug (e.g. `/nina-trevinca-a1b2c3d4`).
+
+### Changed
+
+- The unified "NINA Polaris" dashboard with one tab per instance has been replaced by the per-instance sidebar entries. Users with a single NINA instance will see the sidebar entry renamed from "NINA Polaris" to their configured instance name.
+- The duplicate `## 🔭 <instance>` markdown header at the top of each view has been removed since the instance name is now the page title itself.
+
 ## [0.1.0] - 2026-05-25
 
 First public release on HACS.

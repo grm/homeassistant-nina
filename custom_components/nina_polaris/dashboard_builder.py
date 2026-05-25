@@ -115,12 +115,9 @@ def _build_view(
 
     cards: list[dict[str, Any]] = []
 
-    # ---- Header ----------------------------------------------------------- #
-    cards.append(
-        _markdown(
-            f"## 🔭 {label}\nLive status of the NINA imaging session. Cards adapt automatically to what NINA reports."
-        )
-    )
+    # Header is intentionally minimal — the dashboard's own title (set via
+    # the sidebar entry / page title) already shows the instance name.
+    # We only emit a subtle subtitle on the first card.
 
     # ---- Equipment connection state -------------------------------------- #
     connect_keys = [
@@ -243,7 +240,7 @@ def _build_view(
     if "safety_is_safe" in ents:
         cards.append(_entities_card("Safety", [{"entity": ents["safety_is_safe"]}]))
 
-    if not cards or len(cards) == 1:
+    if not cards:
         cards.append(
             _markdown("_No NINA entities detected yet. Make sure NINA is running and the integration is connected._")
         )
@@ -269,13 +266,26 @@ def _build_view(
 def build_dashboard_config(
     hass: HomeAssistant,
     *,
+    entry_id: str | None = None,
     entry_ids: list[str] | None = None,
     use_mushroom: bool = False,
 ) -> dict[str, Any]:
     """Build the full Lovelace storage config (views[]).
 
-    If `entry_ids` is None, includes every loaded NINA Polaris entry.
+    Three modes:
+      - `entry_id` set → single-instance dashboard (1 view, used by per-entry
+        sidebars). This is the v0.2+ default.
+      - `entry_ids` set → multi-instance dashboard (N views, kept for the
+        umbrella dashboard during migration).
+      - both None → every loaded NINA Polaris entry, multi-view.
     """
+    if entry_id is not None:
+        label = _instance_label(hass, entry_id)
+        return {
+            "title": label,
+            "views": [_build_view(hass, entry_id, use_mushroom=use_mushroom)],
+        }
+
     if entry_ids is None:
         entry_ids = [
             e.entry_id for e in hass.config_entries.async_entries(DOMAIN) if e.state is ConfigEntryState.LOADED

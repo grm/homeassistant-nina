@@ -1,16 +1,18 @@
-"""Auto-registered Lovelace dashboard for NINA Polaris.
+"""Auto-registered Lovelace dashboards for NINA Polaris.
 
-Subclasses `LovelaceConfig` so HA itself asks us for the dashboard config
-every time a user opens it. No service call, no storage, no JS — the
-dashboard is rebuilt on-the-fly from the entity registry on every load.
+For every loaded NINA Polaris config entry we register **one** Lovelace
+dashboard with its own sidebar entry. The sidebar title is the instance
+name as configured in the integration (e.g. "Trevinca", "TEC140").
 
-This is the same pattern used by `homeassistant.components.energy` and
-the built-in Map dashboard, except we generate the cards dynamically.
+The dashboard config is rebuilt on every page load from the entity
+registry — same pattern as the built-in Energy / Map dashboards, except
+we use a `LovelaceConfig` subclass so HA itself drives the regeneration.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 from contextlib import suppress
 from typing import Any
 
@@ -25,32 +27,52 @@ from homeassistant.components.lovelace.const import (
     MODE_STORAGE,
 )
 from homeassistant.components.lovelace.dashboard import LovelaceConfig
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes, json_fragment
 
-from .dashboard_builder import build_dashboard_config
+from .dashboard_builder import _instance_label, build_dashboard_config
 
 _LOGGER = logging.getLogger(__name__)
 
-NINA_DASHBOARD_URL_PATH = "nina-polaris"
-NINA_DASHBOARD_TITLE = "NINA Polaris"
-NINA_DASHBOARD_ICON = "mdi:telescope"
+DEFAULT_ICON = "mdi:telescope"
+URL_PREFIX = "nina-"
 
 
-class NinaLovelaceConfig(LovelaceConfig):
-    """Lovelace config that rebuilds itself from the entity registry."""
+def _slugify(value: str) -> str:
+    """Lowercase + only [a-z0-9-]. Used to build a URL path from the title."""
+    s = value.strip().lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+    s = s.strip("-")
+    return s or "instance"
 
-    def __init__(self, hass: HomeAssistant) -> None:
+
+def _url_path_for(entry: ConfigEntry) -> str:
+    """Stable, human-readable URL path for one entry.
+
+    Format: `nina-<slug>-<entry_id_short>`. The short entry_id suffix
+    guarantees uniqueness even if two NINA instances share a title, while
+    keeping the URL readable.
+    """
+    label = entry.title or "instance"
+    return f"{URL_PREFIX}{_slugify(label)}-{entry.entry_id[:8]}"
+
+
+class NinaInstanceLovelaceConfig(LovelaceConfig):
+    """Lovelace config for a single NINA Polaris instance."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url_path: str) -> None:
+        self._entry_id = entry.entry_id
         super().__init__(
             hass,
-            NINA_DASHBOARD_URL_PATH,
+            url_path,
             {
-                CONF_URL_PATH: NINA_DASHBOARD_URL_PATH,
-                CONF_TITLE: NINA_DASHBOARD_TITLE,
-                CONF_ICON: NINA_DASHBOARD_ICON,
+                CONF_URL_PATH: url_path,
+                CONF_TITLE: entry.title or "NINA",
+                CONF_ICON: DEFAULT_ICON,
                 CONF_REQUIRE_ADMIN: False,
                 CONF_SHOW_IN_SIDEBAR: True,
-                "id": "nina_polaris",
+                "id": f"nina_polaris_{entry.entry_id}",
                 "mode": MODE_STORAGE,
             },
         )
@@ -60,90 +82,86 @@ class NinaLovelaceConfig(LovelaceConfig):
         return MODE_STORAGE
 
     async def async_get_info(self) -> dict[str, Any]:
-        # Lovelace asks for this when listing dashboards. Return the size
-        # of the latest config so the UI shows non-empty.
         config = await self.async_load(False)
-        return {
-            "mode": "generated",
-            "views": len(config.get("views", [])),
-        }
+        return {"mode": "generated", "views": len(config.get("views", []))}
 
     async def async_load(self, force: bool) -> dict[str, Any]:
-        """Build the dashboard fresh from the registry every call."""
-        return build_dashboard_config(self.hass)
+        """Build a fresh single-view dashboard from the registry."""
+        return build_dashboard_config(self.hass, entry_id=self._entry_id)
 
     async def async_json(self, force: bool) -> json_fragment:
-        """Return JSON-serialized config (called by the WS API).
-
-        We rebuild every time and never cache — the registry is the source
-        of truth, and a Lovelace config is small enough that re-encoding is
-        cheap compared to a stale dashboard.
-        """
         return json_fragment(json_bytes(await self.async_load(force)))
 
-    # async_save / async_delete are inherited (raise HomeAssistantError) —
-    # this dashboard is not user-editable through the UI Raw Config Editor.
-    # That's intentional: any edit would be wiped on next load anyway.
+
+# --------------------------------------------------------------------------- #
+# Lovelace internal plumbing                                                  #
+# --------------------------------------------------------------------------- #
+
+
+def _get_dashboards_dict(hass: HomeAssistant) -> dict[str, Any] | None:
+    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
+    if lovelace_data is None:
+        return None
+    if isinstance(lovelace_data, dict):
+        return lovelace_data.get("dashboards")
+    return getattr(lovelace_data, "dashboards", None)
 
 
 @callback
-def async_register_dashboard(hass: HomeAssistant) -> None:
-    """Register our auto-generated dashboard with Lovelace + frontend."""
-    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
-    if lovelace_data is None:
-        _LOGGER.warning("Lovelace not initialized yet — NINA Polaris dashboard cannot register")
-        return
-
-    # `lovelace_data` is a dict in HA <2024.10, a LovelaceData dataclass after.
-    if isinstance(lovelace_data, dict):
-        dashboards = lovelace_data.get("dashboards")
-    else:
-        dashboards = getattr(lovelace_data, "dashboards", None)
+def async_register_instance_dashboard(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Register a per-instance dashboard + sidebar entry for one config entry."""
+    dashboards = _get_dashboards_dict(hass)
     if dashboards is None:
-        _LOGGER.warning("Lovelace dashboards dict not available — cannot register NINA dashboard")
+        _LOGGER.warning(
+            "Lovelace dashboards dict not available — cannot register dashboard for %s",
+            entry.title,
+        )
         return
 
-    if NINA_DASHBOARD_URL_PATH in dashboards:
-        # Already registered (could happen on integration reload).
-        _LOGGER.debug("NINA Polaris dashboard already registered")
+    url_path = _url_path_for(entry)
+
+    if url_path in dashboards:
+        # Already registered (integration reload).
+        _LOGGER.debug("Dashboard %s already registered", url_path)
         return
 
-    dashboards[NINA_DASHBOARD_URL_PATH] = NinaLovelaceConfig(hass)
+    # Use the user-configured entry title (config flow title) — that's what
+    # users expect to see in the sidebar (e.g. "Trevinca", "TEC140"). Fall
+    # back to the device name only if the entry has no title.
+    sidebar_title = entry.title or _instance_label(hass, entry.entry_id)
+
+    dashboards[url_path] = NinaInstanceLovelaceConfig(hass, entry, url_path)
 
     try:
         frontend.async_register_built_in_panel(
             hass,
             component_name=LOVELACE_DOMAIN,
-            sidebar_title=NINA_DASHBOARD_TITLE,
-            sidebar_icon=NINA_DASHBOARD_ICON,
-            frontend_url_path=NINA_DASHBOARD_URL_PATH,
+            sidebar_title=sidebar_title,
+            sidebar_icon=DEFAULT_ICON,
+            frontend_url_path=url_path,
             config={"mode": MODE_STORAGE},
             require_admin=False,
             update=False,
         )
     except ValueError:
-        # Panel already registered (integration reload).
-        _LOGGER.debug("NINA Polaris frontend panel already registered")
+        _LOGGER.debug("Frontend panel %s already registered", url_path)
         return
 
     _LOGGER.info(
-        "Registered NINA Polaris dashboard at /%s (auto-generated, rebuilt on every load)",
-        NINA_DASHBOARD_URL_PATH,
+        "Registered NINA Polaris dashboard '%s' at /%s (auto-generated)",
+        sidebar_title,
+        url_path,
     )
 
 
 @callback
-def async_unregister_dashboard(hass: HomeAssistant) -> None:
-    """Tear down the dashboard when the integration unloads."""
-    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
-    if lovelace_data is not None:
-        dashboards = (
-            lovelace_data.get("dashboards")
-            if isinstance(lovelace_data, dict)
-            else getattr(lovelace_data, "dashboards", None)
-        )
-        if dashboards is not None:
-            dashboards.pop(NINA_DASHBOARD_URL_PATH, None)
+def async_unregister_instance_dashboard(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Tear down a per-instance dashboard when its entry is unloaded."""
+    url_path = _url_path_for(entry)
+
+    dashboards = _get_dashboards_dict(hass)
+    if dashboards is not None:
+        dashboards.pop(url_path, None)
 
     with suppress(KeyError):
-        frontend.async_remove_panel(hass, NINA_DASHBOARD_URL_PATH)
+        frontend.async_remove_panel(hass, url_path)

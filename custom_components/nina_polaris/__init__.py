@@ -8,9 +8,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .api_client import NinaApiClient
-from .const import CONF_PORT, DOMAIN
+from .const import CONF_PORT
 from .coordinator import NinaCoordinator
-from .nina_lovelace import async_register_dashboard, async_unregister_dashboard
+from .nina_lovelace import (
+    async_register_instance_dashboard,
+    async_unregister_instance_dashboard,
+)
 from .services import async_setup_services
 from .websocket import NinaWebSocket
 
@@ -48,20 +51,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
 
-    # Register/refresh the auto-generated NINA Polaris dashboard. Tracked once
-    # per HA process via a sentinel so multiple config entries don't try to
-    # register the same panel twice.
-    domain_state = hass.data.setdefault(DOMAIN, {})
-    if not domain_state.get("dashboard_registered"):
-        try:
-            async_register_dashboard(hass)
-            domain_state["dashboard_registered"] = True
-        except Exception:  # noqa: BLE001 — never block entry setup on a UI-only feature
-            _LOGGER.exception(
-                "Failed to register the NINA Polaris auto-dashboard. "
-                "The integration is otherwise fully functional; entities "
-                "and services are still available."
-            )
+    # Register a per-instance dashboard with its own sidebar entry.
+    # Wrapped so a Lovelace API change can never block the integration.
+    try:
+        async_register_instance_dashboard(hass, entry)
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception(
+            "Failed to register the NINA Polaris dashboard for '%s'. "
+            "The integration is otherwise fully functional; entities "
+            "and services are still available.",
+            entry.title,
+        )
 
     entry.async_on_unload(websocket.async_disconnect)
 
@@ -71,9 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Unload a config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # If this was the last NINA entry, drop the dashboard panel too.
-    remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
-    if not remaining:
-        async_unregister_dashboard(hass)
-        hass.data.get(DOMAIN, {}).pop("dashboard_registered", None)
+    # Drop this entry's sidebar dashboard.
+    try:
+        async_unregister_instance_dashboard(hass, entry)
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception("Failed to unregister NINA Polaris dashboard for '%s'", entry.title)
     return unloaded
