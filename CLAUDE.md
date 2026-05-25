@@ -89,6 +89,7 @@ python -m script.hassfest validate --integration-path custom_components/nina_pol
 - Branch from `main`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`
 - PR per feature/fix
+- **Commit after every feature increment.** Don't batch unrelated changes. Each logical step (a new card layout, a new entity, a bugfix, a doc update tied to a behaviour change) gets its own focused commit and is pushed immediately. This keeps the CHANGELOG `[Unreleased]` aligned with what's on `main` and makes it trivial to bisect or revert a single change.
 
 ## Release Workflow
 
