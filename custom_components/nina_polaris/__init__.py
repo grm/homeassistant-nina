@@ -7,6 +7,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .api_client import NinaApiClient
 from .const import CONF_PORT, DOMAIN
@@ -25,23 +26,17 @@ PLATFORMS = [
 type NinaConfigEntry = ConfigEntry[NinaCoordinator]
 
 DASHBOARD_URL_PATH = f"/{DOMAIN}/dashboard/nina-polaris.js"
-DASHBOARD_URL = f"{DASHBOARD_URL_PATH}?v=20260525b"
-DASHBOARD_REGISTERED_KEY = f"{DOMAIN}_dashboard_registered"
+DASHBOARD_URL = f"{DASHBOARD_URL_PATH}?v=20260525c"
 
 
-async def _async_register_dashboard_strategy(hass: HomeAssistant) -> None:
-    """Register the bundled Lovelace strategy JS once.
-
-    Serves the file from the integration directory under a stable URL and
-    queues it as an extra frontend module so users can write
-    `strategy: type: custom:nina-polaris` without manual resource setup.
-    """
-    if hass.data.get(DASHBOARD_REGISTERED_KEY):
-        return
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the dashboard strategy JS early, before any page is served."""
     js_path = Path(__file__).parent / "dashboard" / "nina-polaris.js"
-    await hass.http.async_register_static_paths([StaticPathConfig(DASHBOARD_URL_PATH, str(js_path), False)])
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(DASHBOARD_URL_PATH, str(js_path), False)]
+    )
     add_extra_js_url(hass, DASHBOARD_URL)
-    hass.data[DASHBOARD_REGISTERED_KEY] = True
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
@@ -58,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await _async_register_dashboard_strategy(hass)
     async_setup_services(hass)
 
     entry.async_on_unload(websocket.async_disconnect)
