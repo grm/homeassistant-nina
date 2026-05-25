@@ -30,12 +30,30 @@ async def test_step_user_shows_form(config_flow):
 
 
 @pytest.mark.asyncio
-async def test_step_user_success(config_flow):
-    """Test successful connection creates an entry."""
-    with patch.object(config_flow, "_test_connection", new_callable=AsyncMock):
+async def test_step_user_success_uses_profile_name(config_flow):
+    """Successful connection + reachable profile API → entry titled with profile name."""
+    with (
+        patch.object(config_flow, "_test_connection", new_callable=AsyncMock),
+        patch.object(config_flow, "_get_profile_name", new_callable=AsyncMock, return_value="Trevinca"),
+    ):
         await config_flow.async_step_user(user_input={CONF_HOST: "192.168.1.100", CONF_PORT: DEFAULT_PORT})
 
     config_flow.async_set_unique_id.assert_called_once_with("nina_192.168.1.100_1888")
+    config_flow.async_create_entry.assert_called_once_with(
+        title="Trevinca",
+        data={CONF_HOST: "192.168.1.100", CONF_PORT: DEFAULT_PORT},
+    )
+
+
+@pytest.mark.asyncio
+async def test_step_user_success_falls_back_when_profile_unavailable(config_flow):
+    """If the profile API is unreachable, fall back to host:port title."""
+    with (
+        patch.object(config_flow, "_test_connection", new_callable=AsyncMock),
+        patch.object(config_flow, "_get_profile_name", new_callable=AsyncMock, return_value=None),
+    ):
+        await config_flow.async_step_user(user_input={CONF_HOST: "192.168.1.100", CONF_PORT: DEFAULT_PORT})
+
     config_flow.async_create_entry.assert_called_once_with(
         title="NINA (192.168.1.100:1888)",
         data={CONF_HOST: "192.168.1.100", CONF_PORT: DEFAULT_PORT},
