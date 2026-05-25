@@ -63,6 +63,14 @@
     },
     "camera": {
       "latest_image": { "name": "Dernière image" }
+    },
+    "button": {
+      "mount_park": { "name": "Parquer la monture" },
+      "mount_unpark": { "name": "Déparquer la monture" },
+      "sequence_start": { "name": "Lancer la séquence" },
+      "sequence_stop": { "name": "Arrêter la séquence" },
+      "autofocus_start": { "name": "Lancer l'autofocus" },
+      "plate_solve": { "name": "Plate solve" }
     }
   }
 }

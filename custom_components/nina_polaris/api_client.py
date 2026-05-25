@@ -114,6 +114,41 @@ class NinaApiClient:
         """Fetch the thumbnail for a given image history index."""
         return await self._get_bytes(f"/image/thumbnail/{index}")
 
+    # --- Action endpoints (NINA exposes them as GET requests) ---
+
+    async def mount_park(self) -> Any:
+        return await self._get("/equipment/mount/park")
+
+    async def mount_unpark(self) -> Any:
+        return await self._get("/equipment/mount/unpark")
+
+    async def mount_set_tracking(self, mode: int) -> Any:
+        """Set the mount tracking mode (0=Sidereal, 1=Lunar, 2=Solar, 3=King, 4=Stopped)."""
+        return await self._get(f"/equipment/mount/tracking?mode={mode}")
+
+    async def sequence_start(self, *, skip_validation: bool = False) -> Any:
+        suffix = "?skipValidation=true" if skip_validation else ""
+        return await self._get(f"/sequence/start{suffix}")
+
+    async def sequence_stop(self) -> Any:
+        return await self._get("/sequence/stop")
+
+    async def autofocus_start(self) -> Any:
+        return await self._get("/equipment/focuser/auto-focus")
+
+    async def autofocus_cancel(self) -> Any:
+        return await self._get("/equipment/focuser/auto-focus?cancel=true")
+
+    async def plate_solve(self) -> Any:
+        """Capture an image and platesolve it (uses NINA's plate-solver settings)."""
+        return await self._get("/equipment/camera/capture?solve=true&omitImage=true")
+
+    async def camera_cool(self, temperature: float, minutes: float = -1) -> Any:
+        return await self._get(f"/equipment/camera/cool?temperature={temperature}&minutes={minutes}")
+
+    async def camera_warm(self, minutes: float = -1) -> Any:
+        return await self._get(f"/equipment/camera/warm?minutes={minutes}")
+
     async def close(self) -> None:
         if self._session and not self._session.closed:
             await self._session.close()

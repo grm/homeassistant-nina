@@ -86,6 +86,16 @@ def mock_nina_api():
     client.get_sequence_state = AsyncMock(return_value=MOCK_SEQUENCE_RAW)
     client.get_image_history_count = AsyncMock(return_value=0)
     client.get_image_bytes = AsyncMock(return_value=b"\xff\xd8\xff\xe0FAKEJPEG")
+    client.mount_park = AsyncMock(return_value="Parking")
+    client.mount_unpark = AsyncMock(return_value="Unparking")
+    client.mount_set_tracking = AsyncMock(return_value="OK")
+    client.sequence_start = AsyncMock(return_value="Started")
+    client.sequence_stop = AsyncMock(return_value="Stopped")
+    client.autofocus_start = AsyncMock(return_value="OK")
+    client.autofocus_cancel = AsyncMock(return_value="OK")
+    client.plate_solve = AsyncMock(return_value={"Success": True})
+    client.camera_cool = AsyncMock(return_value="OK")
+    client.camera_warm = AsyncMock(return_value="OK")
     client.close = AsyncMock()
     return client
 
