@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-25
+
 ### Fixed
 
 - **Latest image camera entity now works against NINA's actual image endpoint format.** NINA's `/image/{index}` returns a JSON envelope with the PNG payload base64-encoded under `Response` (not raw `image/png` bytes as we previously assumed). The API client now accepts both shapes transparently — raw image bytes *and* the `{"Response":"<base64>","Success":true}` envelope. The dashboard "Last image" tile and the `camera.nina_polaris_*_latest_image` entity will now display correctly.
