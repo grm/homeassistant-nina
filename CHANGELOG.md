@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Latest image pixel statistics now report `ADU` as their unit** — `latest_image_mean`, `latest_image_median` and `latest_image_stdev` were unitless before, which made values like `30 678` meaningless. The unit is the raw ADC reading (Analog-to-Digital Units, 0–65535 for typical 16-bit astro CMOS sensors). The `latest_image_stars` sensor lost its previous `stars` unit (cosmetic — HA shows the count without it).
+
 ## [0.5.0-beta.1] - 2026-05-25
 
 ### Added

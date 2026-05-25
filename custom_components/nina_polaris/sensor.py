@@ -150,7 +150,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="latest_image_stars",
         translation_key="latest_image_stars",
-        native_unit_of_measurement="stars",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -167,16 +166,19 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="latest_image_mean",
         translation_key="latest_image_mean",
+        native_unit_of_measurement="ADU",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="latest_image_median",
         translation_key="latest_image_median",
+        native_unit_of_measurement="ADU",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="latest_image_stdev",
         translation_key="latest_image_stdev",
+        native_unit_of_measurement="ADU",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

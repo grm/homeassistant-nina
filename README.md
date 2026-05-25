@@ -92,7 +92,7 @@ Long imaging nights, longer debugging nights — if this integration keeps **you
 | Last image stars | Detected stars in the last frame | — |
 | Last image filter | Filter used for the last frame | — |
 | Last image exposure | Exposure time of the last frame | s |
-| Last image mean / median / std dev | Pixel statistics | — |
+| Last image mean / median / std dev | Pixel statistics | ADU |
 | Last image sensor temp | Sensor temperature during exposure | °C |
 | Last image guiding RMS | Total guiding RMS during exposure | ″ |
 
