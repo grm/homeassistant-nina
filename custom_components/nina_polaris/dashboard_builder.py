@@ -103,6 +103,64 @@ def _markdown(content: str) -> dict[str, Any]:
     return {"type": "markdown", "content": content}
 
 
+# --------------------------------------------------------------------------- #
+# Tile helpers (Option 1 visual: clean grid of tiles, no "Trevinca" prefix)   #
+# --------------------------------------------------------------------------- #
+
+# HA tile colors: red, pink, purple, deep-purple, indigo, blue, light-blue,
+# cyan, teal, green, light-green, lime, yellow, amber, orange, deep-orange,
+# brown, light-grey, grey, dark-grey, blue-grey, black, disabled, white.
+
+
+def _tile(
+    entity_id: str,
+    name: str,
+    *,
+    icon: str | None = None,
+    color: str | None = None,
+    hide_state: bool = False,
+    vertical: bool = True,
+    tap_action: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Native HA `tile` card with a friendly label + optional icon override."""
+    card: dict[str, Any] = {
+        "type": "tile",
+        "entity": entity_id,
+        "name": name,
+        "vertical": vertical,
+    }
+    if icon is not None:
+        card["icon"] = icon
+    if color is not None:
+        card["color"] = color
+    if hide_state:
+        card["hide_state"] = True
+    if tap_action is not None:
+        card["tap_action"] = tap_action
+    return card
+
+
+def _tile_grid(cards: list[dict[str, Any]], columns: int = 2) -> dict[str, Any]:
+    """Wrap tiles in a `grid` card (or `horizontal-stack` for 2)."""
+    if not cards:
+        return {}
+    if len(cards) == 1:
+        return cards[0]
+    return {
+        "type": "grid",
+        "columns": columns,
+        "square": False,
+        "cards": cards,
+    }
+
+
+def _section(title: str, *bodies: dict[str, Any]) -> list[dict[str, Any]]:
+    """Emit a heading card followed by content cards, filtering empties."""
+    out: list[dict[str, Any]] = [{"type": "heading", "heading": title, "heading_style": "title"}]
+    out.extend(b for b in bodies if b)
+    return out
+
+
 def _build_view(
     hass: HomeAssistant,
     entry_id: str,
@@ -157,22 +215,29 @@ def _build_view(
             cam_eid = entry.entity_id
             break
     if cam_eid:
-        cards.append(_picture_entity(cam_eid, "Latest image"))
+        cards.extend(_section("Camera", _picture_entity(cam_eid, "Latest image")))
+    else:
+        cards.append({"type": "heading", "heading": "Camera", "heading_style": "title"})
 
-    cam_status: list[dict[str, Any]] = []
-    for key, _name in [
-        ("camera_temperature", "Sensor temp"),
-        ("camera_cooler_power", "Cooler power"),
-    ]:
-        if key in ents:
-            cam_status.append({"entity": ents[key]})
-    cooler_actions: list[dict[str, Any]] = []
+    cam_tiles: list[dict[str, Any]] = []
+    if "camera_temperature" in ents:
+        cam_tiles.append(
+            _tile(ents["camera_temperature"], "Sensor", icon="mdi:thermometer", color="cyan")
+        )
+    if "camera_cooler_power" in ents:
+        cam_tiles.append(
+            _tile(ents["camera_cooler_power"], "Cooler power", icon="mdi:snowflake", color="light-blue")
+        )
     if "camera_cooler_on" in ents:
-        cooler_actions.append({"entity": ents["camera_cooler_on"], "name": "Cooler"})
+        cam_tiles.append(
+            _tile(ents["camera_cooler_on"], "Cooler", icon="mdi:snowflake-thermometer", color="blue")
+        )
     if "camera_exposing" in ents:
-        cooler_actions.append({"entity": ents["camera_exposing"], "name": "Exposing"})
-    if cam_status or cooler_actions:
-        cards.append(_entities_card("Camera", cam_status + cooler_actions))
+        cam_tiles.append(
+            _tile(ents["camera_exposing"], "Exposing", icon="mdi:camera-iris", color="amber")
+        )
+    if cam_tiles:
+        cards.append(_tile_grid(cam_tiles, columns=2))
 
     # ---- Mount ----------------------------------------------------------- #
     mount_status = []
