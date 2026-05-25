@@ -1,4 +1,4 @@
-# NINA Astrophotography - Home Assistant Integration
+# NINA Polaris - Home Assistant Integration
 
 Custom Home Assistant integration for [NINA (Nighttime Imaging 'N' Astronomy)](https://nighttime-imaging.eu/) via the [ninaAPI plugin](https://github.com/christian-photo/ninaAPI).
 
@@ -29,18 +29,18 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 1. Open HACS in Home Assistant
 2. Click the three dots menu > **Custom repositories**
 3. Add `https://github.com/grm/homeassistant-nina` with category **Integration**
-4. Search for "NINA Astrophotography" and install
+4. Search for "NINA Polaris" and install
 5. Restart Home Assistant
 
 ### Manual
 
-1. Copy `custom_components/nina_astro/` to your Home Assistant `config/custom_components/` directory
+1. Copy `custom_components/nina_polaris/` to your Home Assistant `config/custom_components/` directory
 2. Restart Home Assistant
 
 ## Configuration
 
 1. Go to **Settings > Devices & Services > Add Integration**
-2. Search for "NINA Astrophotography"
+2. Search for "NINA Polaris"
 3. Enter the host (IP or hostname) and port (default: 1888) of your NINA machine
 4. Done
 
@@ -103,7 +103,7 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
    logger:
      default: info
      logs:
-       custom_components.nina_astro: debug
+       custom_components.nina_polaris: debug
    ```
 
 ## Development
@@ -119,8 +119,8 @@ pip install -r requirements.txt
 pytest tests/ -v
 
 # Lint & type check
-ruff check custom_components/nina_astro/
-mypy custom_components/nina_astro/
+ruff check custom_components/nina_polaris/
+mypy custom_components/nina_polaris/
 ```
 
 ## License

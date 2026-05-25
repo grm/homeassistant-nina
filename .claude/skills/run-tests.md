@@ -13,12 +13,12 @@ pytest tests/ -v
 pytest tests/test_sensor.py -v
 
 # Run with coverage
-pytest tests/ --cov=custom_components.nina_astro --cov-report=term-missing
+pytest tests/ --cov=custom_components.nina_polaris --cov-report=term-missing
 
 # Type checking
-mypy custom_components/nina_astro/
+mypy custom_components/nina_polaris/
 
 # Linting
-ruff check custom_components/nina_astro/
-ruff format --check custom_components/nina_astro/
+ruff check custom_components/nina_polaris/
+ruff format --check custom_components/nina_polaris/
 ```

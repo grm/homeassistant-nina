@@ -1,4 +1,4 @@
-# NINA Astrophotography - Home Assistant Integration
+# NINA Polaris - Home Assistant Integration
 
 ## Project Overview
 
@@ -7,7 +7,7 @@ Custom Home Assistant integration connecting to NINA (Nighttime Imaging 'N' Astr
 ## Architecture
 
 ```
-custom_components/nina_astro/
+custom_components/nina_polaris/
 ├── __init__.py          # Integration setup, coordinator creation
 ├── manifest.json        # HA integration metadata
 ├── config_flow.py       # UI-based configuration (host/port)
@@ -28,7 +28,7 @@ custom_components/nina_astro/
 - **No authentication** required by NINA API
 - **Default port**: 1888 (configurable)
 - **IoT class**: `local_push` (WebSocket for real-time + REST polling fallback)
-- **Domain**: `nina_astro`
+- **Domain**: `nina_polaris`
 
 ## Development Commands
 
@@ -40,14 +40,14 @@ pip install -r requirements.txt
 pytest tests/ -v
 
 # Type checking
-mypy custom_components/nina_astro/
+mypy custom_components/nina_polaris/
 
 # Lint
-ruff check custom_components/nina_astro/
-ruff format custom_components/nina_astro/
+ruff check custom_components/nina_polaris/
+ruff format custom_components/nina_polaris/
 
 # Validate integration (requires HA dev environment)
-python -m script.hassfest validate --integration-path custom_components/nina_astro
+python -m script.hassfest validate --integration-path custom_components/nina_polaris
 ```
 
 ## API Reference

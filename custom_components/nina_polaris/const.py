@@ -1,4 +1,4 @@
-DOMAIN = "nina_astro"
+DOMAIN = "nina_polaris"
 
 DEFAULT_PORT = 1888
 DEFAULT_SCAN_INTERVAL = 30

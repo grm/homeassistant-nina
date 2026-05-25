@@ -6,8 +6,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from custom_components.nina_astro.const import DOMAIN
-from custom_components.nina_astro.coordinator import NinaCoordinator, _parse_sequence_state
+from custom_components.nina_polaris.const import DOMAIN
+from custom_components.nina_polaris.coordinator import NinaCoordinator, _parse_sequence_state
 
 from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED, MOCK_SEQUENCE_RAW
 
@@ -28,7 +28,7 @@ def mock_entry():
 
 @pytest.fixture
 def coordinator(mock_hass, mock_entry, mock_nina_api, mock_websocket):
-    with patch("custom_components.nina_astro.coordinator.DataUpdateCoordinator.__init__"):
+    with patch("custom_components.nina_polaris.coordinator.DataUpdateCoordinator.__init__"):
         coord = NinaCoordinator.__new__(NinaCoordinator)
         coord.hass = mock_hass
         coord.config_entry = mock_entry

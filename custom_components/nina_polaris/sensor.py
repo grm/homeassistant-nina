@@ -1,4 +1,4 @@
-"""Sensor platform for NINA Astrophotography."""
+"""Sensor platform for NINA Polaris."""
 
 import logging
 import math

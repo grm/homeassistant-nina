@@ -1,4 +1,4 @@
-"""NINA Astrophotography integration for Home Assistant."""
+"""NINA Polaris integration for Home Assistant."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform

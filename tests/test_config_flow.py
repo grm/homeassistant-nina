@@ -7,8 +7,8 @@ import pytest
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.nina_astro.config_flow import NinaConfigFlow
-from custom_components.nina_astro.const import CONF_PORT, DEFAULT_PORT
+from custom_components.nina_polaris.config_flow import NinaConfigFlow
+from custom_components.nina_polaris.const import CONF_PORT, DEFAULT_PORT
 
 
 @pytest.fixture

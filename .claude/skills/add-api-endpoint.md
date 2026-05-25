@@ -7,7 +7,7 @@ description: Add a new NINA REST API endpoint call
 
 When adding a new API endpoint:
 
-1. Add the method to `custom_components/nina_astro/api_client.py`
+1. Add the method to `custom_components/nina_polaris/api_client.py`
 2. Reference `api_spec.yaml` for the endpoint path, parameters, and response format
 3. All NINA endpoints return: `{"Response": <data>, "Error": "", "StatusCode": 200, "Success": true, "Type": "API"}`
 4. The `_get` method already unwraps the `Response` field

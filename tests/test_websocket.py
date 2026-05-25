@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import pytest
 
-from custom_components.nina_astro.websocket import NinaWebSocket
+from custom_components.nina_polaris.websocket import NinaWebSocket
 
 
 @pytest.fixture

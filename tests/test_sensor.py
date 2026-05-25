@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.nina_astro.coordinator import NinaCoordinator
-from custom_components.nina_astro.sensor import SENSOR_DESCRIPTIONS, NinaSensor, _safe_float
+from custom_components.nina_polaris.coordinator import NinaCoordinator
+from custom_components.nina_polaris.sensor import SENSOR_DESCRIPTIONS, NinaSensor, _safe_float
 
 from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED
 

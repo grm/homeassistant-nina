@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import pytest
 
-from custom_components.nina_astro.api_client import NinaApiClient, NinaApiError
+from custom_components.nina_polaris.api_client import NinaApiClient, NinaApiError
 
 
 @pytest.fixture
@@ -148,7 +148,7 @@ def test_base_url_custom_port():
 async def test_session_created_on_first_use(api_client):
     """Test that session is created lazily."""
     assert api_client._session is None
-    with patch("custom_components.nina_astro.api_client.aiohttp.ClientSession") as mock_cls:
+    with patch("custom_components.nina_polaris.api_client.aiohttp.ClientSession") as mock_cls:
         fake = MagicMock()
         fake.closed = False
         mock_cls.return_value = fake

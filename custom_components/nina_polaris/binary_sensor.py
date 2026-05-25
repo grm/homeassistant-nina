@@ -1,4 +1,4 @@
-"""Binary sensor platform for NINA Astrophotography."""
+"""Binary sensor platform for NINA Polaris."""
 
 import logging
 from typing import Any

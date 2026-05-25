@@ -7,9 +7,9 @@ description: Add a new binary sensor entity to the NINA integration
 
 When adding a new binary sensor:
 
-1. Add a `BinarySensorEntityDescription` to `BINARY_SENSOR_DESCRIPTIONS` in `custom_components/nina_astro/binary_sensor.py`
+1. Add a `BinarySensorEntityDescription` to `BINARY_SENSOR_DESCRIPTIONS` in `custom_components/nina_polaris/binary_sensor.py`
 2. Add the data extraction logic in the `_extract_value` method's mapping dict
-3. Add the translation string in `custom_components/nina_astro/strings.json` under `entity.binary_sensor`
+3. Add the translation string in `custom_components/nina_polaris/strings.json` under `entity.binary_sensor`
 
 Template:
 ```python

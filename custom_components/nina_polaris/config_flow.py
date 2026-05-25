@@ -1,4 +1,4 @@
-"""Config flow for NINA Astrophotography."""
+"""Config flow for NINA Polaris."""
 
 from typing import Any
 

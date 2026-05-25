@@ -4,11 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.nina_astro.binary_sensor import (
+from custom_components.nina_polaris.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
     NinaBinarySensor,
 )
-from custom_components.nina_astro.coordinator import NinaCoordinator
+from custom_components.nina_polaris.coordinator import NinaCoordinator
 
 from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED
 
