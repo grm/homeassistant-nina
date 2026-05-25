@@ -49,38 +49,35 @@ async def test_build_dashboard_config_includes_camera(hass):
 
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_equipment_uses_entities_card(hass):
-    """Each equipment device is rendered as its own status row."""
+    """The Equipment card is a single vertical entities list."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    # Per-device rows are entities cards with a single row whose name is the
-    # device label (Camera / Mount / Guider / …).
-    device_rows = [
+    eq_cards = [
         c
         for c in cards
         if c.get("type") == "entities"
-        and len(c.get("entities", [])) == 1
-        and c["entities"][0].get("name") in {"Camera", "Mount", "Guider", "Focuser"}
+        and any(row.get("name") in {"Camera", "Mount", "Guider"} for row in c.get("entities", []))
     ]
-    assert device_rows, "expected per-device equipment status rows"
-    names = {c["entities"][0]["name"] for c in device_rows}
-    assert {"Camera", "Mount"}.issubset(names)
+    assert len(eq_cards) == 1, "expected exactly one Equipment entities card"
+    rows = eq_cards[0]["entities"]
+    names = {row["name"] for row in rows}
+    assert {"Camera", "Mount", "Focuser", "Guider"}.issubset(names)
 
 
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_equipment_inline_actions(hass):
-    """Connected devices expose action tiles inline below their status row."""
+    """A Controls section follows Equipment with action tiles."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    # Action tiles point at button.* entities.
+    headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
+    assert "Equipment" in headings and "Controls" in headings
     action_tile_entities = {
         c.get("entity")
         for c in cards
         if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")
     }
-    # At minimum, we expect connect/disconnect tiles and a park action somewhere.
     joined = " ".join(action_tile_entities)
-    assert "park" in joined, f"expected a park action tile, got {action_tile_entities}"
-    assert "connect" in joined, f"expected a connect/disconnect action tile, got {action_tile_entities}"
+    assert "park" in joined and "connect" in joined
 
 
 @pytest.mark.usefixtures("mock_config_entry")

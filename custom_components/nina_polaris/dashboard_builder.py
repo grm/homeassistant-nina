@@ -369,83 +369,79 @@ def _build_view(
             point_cards.append(_tile_grid(guide_tiles, columns=2))
         point_cards.append(_history_card("Guiding error (arcsec)", guide_entities, hours=2))
 
-    # Equipment connection state with inline actions — shown above Weather.
-    # Each device gets a status row (binary sensor) plus a row of action
-    # tiles that auto-grey-out when the parent device is offline.
-    device_blocks: list[tuple[str, str, list[str]]] = [
-        # (label, status_binary_sensor_key, [action_button_keys...])
-        (
-            "Camera",
-            "camera_connected",
-            ["camera_connect", "camera_disconnect", "camera_abort_exposure"],
-        ),
-        (
-            "Mount",
-            "mount_connected",
-            ["mount_connect", "mount_disconnect", "mount_park", "mount_unpark"],
-        ),
-        (
-            "Focuser",
-            "focuser_connected",
-            ["focuser_connect", "focuser_disconnect", "autofocus_start"],
-        ),
-        (
-            "Guider",
-            "guider_connected",
-            ["guider_connect", "guider_disconnect", "guider_start", "guider_stop"],
-        ),
-        ("Filter wheel", "filterwheel_connected", ["filterwheel_connect", "filterwheel_disconnect"]),
-        ("Rotator", "rotator_connected", []),
-        (
-            "Dome",
-            "dome_connected",
-            ["dome_connect", "dome_disconnect", "dome_open", "dome_close", "dome_park"],
-        ),
-        ("Weather", "weather_connected", []),
-        ("Safety monitor", "safety_monitor_connected", []),
+    # Equipment connection state — compact list of all devices.
+    connect_keys: list[tuple[str, str]] = [
+        ("camera_connected", "Camera"),
+        ("mount_connected", "Mount"),
+        ("focuser_connected", "Focuser"),
+        ("guider_connected", "Guider"),
+        ("filterwheel_connected", "Filter wheel"),
+        ("rotator_connected", "Rotator"),
+        ("dome_connected", "Dome"),
+        ("weather_connected", "Weather"),
+        ("safety_monitor_connected", "Safety monitor"),
+    ]
+    connect_rows = [{"entity": ents[key], "name": lbl} for key, lbl in connect_keys if key in ents]
+
+    # Action buttons grouped under "Controls" — flat list, no per-device split,
+    # tiles auto-grey-out when their parent device is offline (handled in
+    # button.py via available_when_data).
+    action_specs: list[tuple[str, str]] = [
+        ("camera_connect", "Connect cam"),
+        ("camera_disconnect", "Disconnect cam"),
+        ("camera_abort_exposure", "Abort exposure"),
+        ("mount_connect", "Connect mount"),
+        ("mount_disconnect", "Disconnect mount"),
+        ("mount_park", "Park"),
+        ("mount_unpark", "Unpark"),
+        ("focuser_connect", "Connect focuser"),
+        ("focuser_disconnect", "Disconnect focuser"),
+        ("autofocus_start", "Autofocus"),
+        ("guider_connect", "Connect guider"),
+        ("guider_disconnect", "Disconnect guider"),
+        ("guider_start", "Start guiding"),
+        ("guider_stop", "Stop guiding"),
+        ("filterwheel_connect", "Connect FW"),
+        ("filterwheel_disconnect", "Disconnect FW"),
+        ("dome_connect", "Connect dome"),
+        ("dome_disconnect", "Disconnect dome"),
+        ("dome_open", "Open shutter"),
+        ("dome_close", "Close shutter"),
+        ("dome_park", "Park dome"),
+        ("plate_solve", "Plate solve"),
+    ]
+    action_tiles = [
+        {"type": "tile", "entity": ents[k], "vertical": False, "hide_state": True, "name": short}
+        for k, short in action_specs
+        if k in ents
     ]
 
-    equipment_cards: list[dict[str, Any]] = []
-    for label, status_key, action_keys in device_blocks:
-        if status_key not in ents:
-            continue
-        device_cards: list[dict[str, Any]] = [
-            {
-                "type": "entities",
-                "show_header_toggle": False,
-                "state_color": True,
-                "entities": [{"entity": ents[status_key], "name": label}],
-            }
-        ]
-        action_tiles = [
-            {"type": "tile", "entity": ents[k], "vertical": False, "hide_state": True} for k in action_keys if k in ents
-        ]
-        if action_tiles:
-            device_cards.append(_tile_grid(action_tiles, columns=2))
-        equipment_cards.append({"type": "vertical-stack", "cards": device_cards})
-
-    if equipment_cards:
+    if connect_rows:
         env_cards.insert(0, {"type": "heading", "heading": "Equipment", "heading_style": "title"})
-        for i, card in enumerate(equipment_cards, start=1):
-            env_cards.insert(i, card)
-
-    # Mushroom users get a more compact chip representation of the connection
-    # state on top, but the inline action tiles are kept native HA so we don't
-    # introduce a hard mushroom dependency on actions.
-    if use_mushroom and equipment_cards:
-        connect_keys: list[tuple[str, str]] = [
-            (status_key, label) for label, status_key, _ in device_blocks if status_key in ents
-        ]
-        chips_card = {
-            "type": "custom:mushroom-chips-card",
-            "chips": [
-                {"type": "entity", "entity": ents[k], "icon_color": "blue", "content_info": "name"}
-                for k, _ in connect_keys
-            ],
-        }
-        env_cards.insert(1, chips_card)
-
-    # ---- Assemble multi-column 'sections' view --------------------------- #
+        if use_mushroom:
+            env_cards.insert(
+                1,
+                {
+                    "type": "custom:mushroom-chips-card",
+                    "chips": [
+                        {"type": "entity", "entity": row["entity"], "icon_color": "blue", "content_info": "name"}
+                        for row in connect_rows
+                    ],
+                },
+            )
+        else:
+            env_cards.insert(
+                1,
+                {
+                    "type": "entities",
+                    "show_header_toggle": False,
+                    "state_color": True,
+                    "entities": connect_rows,
+                },
+            )
+        if action_tiles:
+            env_cards.insert(2, {"type": "heading", "heading": "Controls", "heading_style": "title"})
+            env_cards.insert(3, _tile_grid(action_tiles, columns=2))
     sections: list[dict[str, Any]] = []
     if env_cards:
         sections.append({"type": "grid", "cards": env_cards, "column_span": 1})
