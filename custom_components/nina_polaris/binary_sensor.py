@@ -121,13 +121,22 @@ class NinaBinarySensor(NinaEntity, BinarySensorEntity):
         return value
 
     def _extract_value(self, key: str) -> bool | None:
-        """Extract value from coordinator data."""
+        """Extract value from coordinator data.
+
+        State binary sensors return ``None`` when the parent device reports
+        ``Connected: false`` so HA shows ``unknown`` instead of a stale
+        ``False`` cached from the last connected session.
+        """
         equipment = self.coordinator.data.get("equipment", {})
         sequence = self.coordinator.data.get("sequence", {})
+        camera = equipment.get("Camera", {})
+        mount = equipment.get("Mount", {})
+        camera_online = bool(camera.get("Connected"))
+        mount_online = bool(mount.get("Connected"))
 
         mapping: dict[str, Any] = {
-            "camera_connected": lambda: equipment.get("Camera", {}).get("Connected", False),
-            "mount_connected": lambda: equipment.get("Mount", {}).get("Connected", False),
+            "camera_connected": lambda: camera.get("Connected", False),
+            "mount_connected": lambda: mount.get("Connected", False),
             "guider_connected": lambda: equipment.get("Guider", {}).get("Connected", False),
             "focuser_connected": lambda: equipment.get("Focuser", {}).get("Connected", False),
             "filterwheel_connected": lambda: equipment.get("FilterWheel", {}).get("Connected", False),
@@ -137,11 +146,11 @@ class NinaBinarySensor(NinaEntity, BinarySensorEntity):
             "safety_monitor_connected": lambda: equipment.get("SafetyMonitor", {}).get("Connected", False),
             "safety_is_safe": lambda: equipment.get("SafetyMonitor", {}).get("IsSafe", False),
             "sequence_running": lambda: sequence.get("running", False),
-            "mount_tracking": lambda: equipment.get("Mount", {}).get("TrackingEnabled", False),
-            "mount_slewing": lambda: equipment.get("Mount", {}).get("Slewing", False),
-            "mount_at_park": lambda: equipment.get("Mount", {}).get("AtPark", False),
-            "camera_exposing": lambda: equipment.get("Camera", {}).get("IsExposing", False),
-            "camera_cooler_on": lambda: equipment.get("Camera", {}).get("CoolerOn", False),
+            "mount_tracking": lambda: mount.get("TrackingEnabled", False) if mount_online else None,
+            "mount_slewing": lambda: mount.get("Slewing", False) if mount_online else None,
+            "mount_at_park": lambda: mount.get("AtPark", False) if mount_online else None,
+            "camera_exposing": lambda: camera.get("IsExposing", False) if camera_online else None,
+            "camera_cooler_on": lambda: camera.get("CoolerOn", False) if camera_online else None,
         }
 
         extractor = mapping.get(key)

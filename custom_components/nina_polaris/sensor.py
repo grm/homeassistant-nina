@@ -238,7 +238,13 @@ class NinaSensor(NinaEntity, SensorEntity):
         return value
 
     def _extract_value(self, key: str):
-        """Extract value from coordinator data based on key."""
+        """Extract value from coordinator data based on key.
+
+        Sensors that depend on a NINA equipment device return ``None`` (i.e.
+        ``unknown`` in HA) when that device reports ``Connected: false``.
+        NINA otherwise echoes stale numeric defaults (``0``, ``-1``…) which
+        looked like live values on the dashboard.
+        """
         equipment = self.coordinator.data.get("equipment", {})
         sequence = self.coordinator.data.get("sequence", {})
         latest = self.coordinator.data.get("latest_image") or {}
@@ -249,18 +255,25 @@ class NinaSensor(NinaEntity, SensorEntity):
         weather = equipment.get("WeatherData", {})
         last_step = guider.get("LastGuideStep", {})
 
+        # Connection gates: if the parent device is offline, return None for
+        # any sensor sourced from it. Weather/Safety stay live independently.
+        camera_online = bool(camera.get("Connected"))
+        mount_online = bool(mount.get("Connected"))
+        guider_online = bool(guider.get("Connected"))
+        focuser_online = bool(focuser.get("Connected"))
+
         mapping = {
-            "camera_temperature": lambda: _safe_float(camera.get("Temperature")),
-            "camera_cooler_power": lambda: _safe_float(camera.get("CoolerPower")),
-            "guider_ra_distance": lambda: _safe_float(last_step.get("RADistanceRaw")),
-            "guider_dec_distance": lambda: _safe_float(last_step.get("DECDistanceRaw")),
-            "focuser_position": lambda: focuser.get("Position"),
-            "focuser_temperature": lambda: _safe_float(focuser.get("Temperature")),
-            "mount_ra": lambda: _safe_float(mount.get("RightAscension")),
-            "mount_dec": lambda: _safe_float(mount.get("Declination")),
-            "mount_altitude": lambda: _safe_float(mount.get("Altitude")),
-            "mount_azimuth": lambda: _safe_float(mount.get("Azimuth")),
-            "mount_time_to_flip": lambda: _safe_float(mount.get("TimeToMeridianFlip")),
+            "camera_temperature": lambda: _safe_float(camera.get("Temperature")) if camera_online else None,
+            "camera_cooler_power": lambda: _safe_float(camera.get("CoolerPower")) if camera_online else None,
+            "guider_ra_distance": lambda: _safe_float(last_step.get("RADistanceRaw")) if guider_online else None,
+            "guider_dec_distance": lambda: _safe_float(last_step.get("DECDistanceRaw")) if guider_online else None,
+            "focuser_position": lambda: focuser.get("Position") if focuser_online else None,
+            "focuser_temperature": lambda: _safe_float(focuser.get("Temperature")) if focuser_online else None,
+            "mount_ra": lambda: _safe_float(mount.get("RightAscension")) if mount_online else None,
+            "mount_dec": lambda: _safe_float(mount.get("Declination")) if mount_online else None,
+            "mount_altitude": lambda: _safe_float(mount.get("Altitude")) if mount_online else None,
+            "mount_azimuth": lambda: _safe_float(mount.get("Azimuth")) if mount_online else None,
+            "mount_time_to_flip": lambda: _safe_float(mount.get("TimeToMeridianFlip")) if mount_online else None,
             "sequence_target": lambda: sequence.get("current_target"),
             "weather_temperature": lambda: _safe_float(weather.get("Temperature")),
             "weather_humidity": lambda: _safe_float(weather.get("Humidity")),
