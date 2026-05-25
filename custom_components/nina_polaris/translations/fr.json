@@ -79,6 +79,33 @@
       },
       "weather_sky_temperature": {
         "name": "Température du ciel"
+      },
+      "latest_image_hfr": {
+        "name": "HFR dernière image"
+      },
+      "latest_image_stars": {
+        "name": "Étoiles dernière image"
+      },
+      "latest_image_filter": {
+        "name": "Filtre dernière image"
+      },
+      "latest_image_exposure_time": {
+        "name": "Pose dernière image"
+      },
+      "latest_image_mean": {
+        "name": "Moyenne dernière image"
+      },
+      "latest_image_median": {
+        "name": "Médiane dernière image"
+      },
+      "latest_image_stdev": {
+        "name": "Écart-type dernière image"
+      },
+      "latest_image_temperature": {
+        "name": "Température capteur (image)"
+      },
+      "latest_image_guiding_rms": {
+        "name": "RMS guidage (image)"
       }
     },
     "binary_sensor": {

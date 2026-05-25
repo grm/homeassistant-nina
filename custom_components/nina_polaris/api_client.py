@@ -84,6 +84,19 @@ class NinaApiClient:
     async def get_image_history(self) -> list[dict[str, Any]]:
         return await self._get("/image-history?all=true")
 
+    async def get_image_metadata(self, index: int) -> dict[str, Any] | None:
+        """Fetch metadata for a single image at the given history index.
+
+        NINA's `/image-history?index=N` returns either a single entry, a list
+        with one entry, or an empty list — normalize to a dict-or-None.
+        """
+        result = await self._get(f"/image-history?index={index}")
+        if isinstance(result, list):
+            return result[0] if result else None
+        if isinstance(result, dict):
+            return result
+        return None
+
     async def get_image_history_count(self) -> int:
         """Return the number of images in NINA's image history."""
         result = await self._get("/image-history?count=true")

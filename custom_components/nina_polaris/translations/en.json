@@ -79,6 +79,33 @@
       },
       "weather_sky_temperature": {
         "name": "Sky temperature"
+      },
+      "latest_image_hfr": {
+        "name": "Last image HFR"
+      },
+      "latest_image_stars": {
+        "name": "Last image stars"
+      },
+      "latest_image_filter": {
+        "name": "Last image filter"
+      },
+      "latest_image_exposure_time": {
+        "name": "Last image exposure"
+      },
+      "latest_image_mean": {
+        "name": "Last image mean"
+      },
+      "latest_image_median": {
+        "name": "Last image median"
+      },
+      "latest_image_stdev": {
+        "name": "Last image std dev"
+      },
+      "latest_image_temperature": {
+        "name": "Last image sensor temp"
+      },
+      "latest_image_guiding_rms": {
+        "name": "Last image guiding RMS"
       }
     },
     "binary_sensor": {

@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for NINA."""
 
 import logging
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -13,6 +14,24 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .websocket import NinaWebSocket
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# NINA's RmsText is a string like "Total: 0.42 arcsec, RA: 0.31, Dec: 0.28".
+# We surface the leading "Total" value as a numeric sensor.
+_RMS_TOTAL_RE = re.compile(r"([0-9]+(?:\.[0-9]+)?)\s*(?:arcsec|\")", re.IGNORECASE)
+
+
+def _parse_rms_total(rms_text: str | None) -> float | None:
+    """Extract the total guiding RMS (arcsec) from NINA's RmsText string."""
+    if not rms_text:
+        return None
+    match = _RMS_TOTAL_RE.search(rms_text)
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except (TypeError, ValueError):
+        return None
 
 
 def _parse_sequence_state(sequence_raw: list[dict[str, Any]]) -> dict[str, Any]:
@@ -63,6 +82,22 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.websocket = websocket
         self.websocket.set_callback(self._on_websocket_event)
         self.latest_image_index: int | None = None
+        self.latest_image: dict[str, Any] | None = None
+        self._latest_image_fetched_index: int | None = None
+
+    async def _refresh_latest_image_metadata(self) -> None:
+        """Fetch metadata for the latest image if the index changed."""
+        if self.latest_image_index is None:
+            return
+        if self._latest_image_fetched_index == self.latest_image_index:
+            return
+        try:
+            meta = await self.api_client.get_image_metadata(self.latest_image_index)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Could not fetch image metadata: %s", err)
+            return
+        self.latest_image = meta
+        self._latest_image_fetched_index = self.latest_image_index
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NINA API."""
@@ -80,6 +115,8 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except Exception as img_err:  # noqa: BLE001
                 _LOGGER.debug("Could not fetch image history count: %s", img_err)
 
+            await self._refresh_latest_image_metadata()
+
             _LOGGER.debug(
                 "NINA update: camera_connected=%s, mount_connected=%s, "
                 "guider_connected=%s, sequence_running=%s, target=%s",
@@ -93,6 +130,7 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {
                 "equipment": equipment,
                 "sequence": sequence,
+                "latest_image": self.latest_image,
             }
         except Exception as err:
             raise UpdateFailed(f"Error communicating with NINA: {err}") from err

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Latest image metrics sensors.** New sensors expose key statistics from the most recently saved frame so you can monitor session quality without leaving Home Assistant: `latest_image_hfr` (px), `latest_image_stars`, `latest_image_filter`, `latest_image_exposure_time` (s), `latest_image_mean`, `latest_image_median`, `latest_image_stdev`, `latest_image_temperature` (°C, sensor temp during exposure) and `latest_image_guiding_rms` (″, parsed from NINA's `RmsText`). Metadata is fetched once per new image (cached on the index, no spam) via `/image-history?index=N`. Translations: EN + FR.
+
 ### Changed
 
 - **Dashboard layout reordered.** The Focuser card is now grouped under the Camera section in the Imaging column (focus belongs to imaging, not pointing). The Equipment connection list moves to the top of the Environment column, above Weather, so a glance at the left column tells you what's connected and what the sky is doing.

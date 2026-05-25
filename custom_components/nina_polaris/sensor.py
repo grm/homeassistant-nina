@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import NinaCoordinator
+from .coordinator import NinaCoordinator, _parse_rms_total
 from .entity import NinaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,6 +140,58 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # ---- Latest image metrics ------------------------------------------- #
+    SensorEntityDescription(
+        key="latest_image_hfr",
+        translation_key="latest_image_hfr",
+        native_unit_of_measurement="px",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_stars",
+        translation_key="latest_image_stars",
+        native_unit_of_measurement="stars",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_filter",
+        translation_key="latest_image_filter",
+    ),
+    SensorEntityDescription(
+        key="latest_image_exposure_time",
+        translation_key="latest_image_exposure_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement="s",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_mean",
+        translation_key="latest_image_mean",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_median",
+        translation_key="latest_image_median",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_stdev",
+        translation_key="latest_image_stdev",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_temperature",
+        translation_key="latest_image_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="latest_image_guiding_rms",
+        translation_key="latest_image_guiding_rms",
+        native_unit_of_measurement='"',
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
@@ -187,6 +239,7 @@ class NinaSensor(NinaEntity, SensorEntity):
         """Extract value from coordinator data based on key."""
         equipment = self.coordinator.data.get("equipment", {})
         sequence = self.coordinator.data.get("sequence", {})
+        latest = self.coordinator.data.get("latest_image") or {}
         camera = equipment.get("Camera", {})
         mount = equipment.get("Mount", {})
         guider = equipment.get("Guider", {})
@@ -214,6 +267,15 @@ class NinaSensor(NinaEntity, SensorEntity):
             "weather_wind_speed": lambda: _safe_float(weather.get("WindSpeed")),
             "weather_sky_quality": lambda: _safe_float(weather.get("SkyQuality")),
             "weather_sky_temperature": lambda: _safe_float(weather.get("SkyTemperature")),
+            "latest_image_hfr": lambda: _safe_float(latest.get("HFR")),
+            "latest_image_stars": lambda: latest.get("Stars"),
+            "latest_image_filter": lambda: latest.get("Filter"),
+            "latest_image_exposure_time": lambda: _safe_float(latest.get("ExposureTime")),
+            "latest_image_mean": lambda: _safe_float(latest.get("Mean")),
+            "latest_image_median": lambda: _safe_float(latest.get("Median")),
+            "latest_image_stdev": lambda: _safe_float(latest.get("StDev")),
+            "latest_image_temperature": lambda: _safe_float(latest.get("Temperature")),
+            "latest_image_guiding_rms": lambda: _parse_rms_total(latest.get("RmsText")),
         }
 
         extractor = mapping.get(key)

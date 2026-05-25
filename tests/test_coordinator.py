@@ -7,7 +7,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.nina_polaris.const import DOMAIN
-from custom_components.nina_polaris.coordinator import NinaCoordinator, _parse_sequence_state
+from custom_components.nina_polaris.coordinator import (
+    NinaCoordinator,
+    _parse_rms_total,
+    _parse_sequence_state,
+)
 
 from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED, MOCK_SEQUENCE_RAW
 
@@ -39,7 +43,26 @@ def coordinator(mock_hass, mock_entry, mock_nina_api, mock_websocket):
         coord.data = None
         coord.async_set_updated_data = MagicMock()
         coord.latest_image_index = None
+        coord.latest_image = None
+        coord._latest_image_fetched_index = None
         return coord
+
+
+class TestParseRmsTotal:
+    """Verify NINA RmsText parsing."""
+
+    def test_typical_format(self):
+        assert _parse_rms_total("Total: 0.42 arcsec, RA: 0.31, Dec: 0.28") == 0.42
+
+    def test_arcsec_unit_quote(self):
+        assert _parse_rms_total('Total: 1.05" RA: 0.5"') == 1.05
+
+    def test_no_unit_returns_none(self):
+        assert _parse_rms_total("Total: 0.42") is None
+
+    def test_empty_or_none(self):
+        assert _parse_rms_total(None) is None
+        assert _parse_rms_total("") is None
 
 
 class TestParseSequenceState:

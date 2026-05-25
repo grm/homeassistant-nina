@@ -82,6 +82,13 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 | Weather wind speed | Wind speed | m/s |
 | Sky quality (SQM) | Sky background magnitude | mag/arcsec² |
 | Sky temperature | Infrared sky temperature | °C |
+| Last image HFR | HFR of the most recent frame | px |
+| Last image stars | Detected stars in the last frame | — |
+| Last image filter | Filter used for the last frame | — |
+| Last image exposure | Exposure time of the last frame | s |
+| Last image mean / median / std dev | Pixel statistics | — |
+| Last image sensor temp | Sensor temperature during exposure | °C |
+| Last image guiding RMS | Total guiding RMS during exposure | ″ |
 
 ### Binary Sensors
 
