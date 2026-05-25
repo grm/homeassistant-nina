@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-25
+
 ### Changed
 
 - **Controls section reorganized per device with aligned Connect/Disconnect columns.** The flat 22-tile grid is replaced by per-device blocks: row 1 is always `[Connect <device>] [Disconnect <device>]` (left = connect, right = disconnect, columns aligned across all devices), row 2+ holds the device's secondary actions (Park/Unpark, Autofocus, guiding start/stop, dome shutter, plate solve, etc.). Easier to scan, easier to act.
