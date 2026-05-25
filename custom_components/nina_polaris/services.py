@@ -38,6 +38,13 @@ SERVICE_UNPARK_MOUNT = "unpark_mount"
 SERVICE_START_AUTOFOCUS = "start_autofocus"
 SERVICE_CANCEL_AUTOFOCUS = "cancel_autofocus"
 SERVICE_PLATE_SOLVE = "plate_solve"
+SERVICE_GENERATE_DASHBOARD = "generate_dashboard"
+
+ATTR_USE_MUSHROOM = "use_mushroom"
+ATTR_URL_PATH = "url_path"
+ATTR_TITLE = "title"
+
+LOVELACE_DOMAIN = "lovelace"
 
 TRACKING_MODES: dict[str, int] = {
     "sidereal": 0,
@@ -73,6 +80,14 @@ SET_TRACKING_SCHEMA = _BASE_SCHEMA.extend(
 START_SEQUENCE_SCHEMA = _BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_SKIP_VALIDATION, default=False): cv.boolean,
+    }
+)
+
+GENERATE_DASHBOARD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_URL_PATH, default="nina-polaris"): cv.string,
+        vol.Optional(ATTR_TITLE, default="NINA Polaris"): cv.string,
+        vol.Optional(ATTR_USE_MUSHROOM, default=False): cv.boolean,
     }
 )
 
@@ -131,6 +146,68 @@ def _make_simple(action_name: str, fn_name: str):
     return _handler
 
 
+async def _generate_dashboard(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Create or update a Lovelace storage dashboard for NINA Polaris."""
+    from .dashboard_builder import build_dashboard_config  # local import (circular safety)
+
+    url_path = call.data[ATTR_URL_PATH]
+    title = call.data[ATTR_TITLE]
+    use_mushroom = call.data[ATTR_USE_MUSHROOM]
+
+    lovelace_data = hass.data.get(LOVELACE_DOMAIN)
+    if lovelace_data is None:
+        raise HomeAssistantError("Lovelace is not initialized. Make sure the Lovelace UI is enabled.")
+
+    if isinstance(lovelace_data, dict):
+        dashboards_collection = lovelace_data.get("dashboards_collection")
+        dashboards = lovelace_data.get("dashboards", {})
+    else:  # LovelaceData dataclass (newer HA)
+        dashboards_collection = getattr(lovelace_data, "dashboards_collection", None)
+        dashboards = getattr(lovelace_data, "dashboards", {})
+
+    if dashboards_collection is None:
+        raise HomeAssistantError(
+            "Lovelace is in YAML mode — automatic dashboard generation is only "
+            "supported in storage (UI) mode. Run HA with `lovelace: mode: storage` "
+            "or copy the generated YAML manually."
+        )
+
+    config = build_dashboard_config(hass, use_mushroom=use_mushroom)
+
+    # Create or fetch the dashboard entry.
+    existing = dashboards.get(url_path)
+    if existing is None:
+        try:
+            await dashboards_collection.async_create_item(
+                {
+                    "url_path": url_path,
+                    "title": title,
+                    "icon": "mdi:telescope",
+                    "show_in_sidebar": True,
+                    "require_admin": False,
+                    "mode": "storage",
+                    "allow_single_word": True,
+                }
+            )
+        except Exception as err:  # noqa: BLE001
+            raise HomeAssistantError(f"Failed to create dashboard: {err}") from err
+        existing = dashboards.get(url_path)
+        if existing is None:
+            raise HomeAssistantError(f"Dashboard '{url_path}' was created but cannot be found.")
+
+    # Save the cards/views into the dashboard storage.
+    try:
+        await existing.async_save(config)
+    except Exception as err:  # noqa: BLE001
+        raise HomeAssistantError(f"Failed to save dashboard config: {err}") from err
+
+    _LOGGER.info(
+        "Generated NINA Polaris dashboard '%s' (%d view(s))",
+        url_path,
+        len(config.get("views", [])),
+    )
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_COOL_CAMERA):
@@ -149,3 +226,4 @@ def async_setup_services(hass: HomeAssistant) -> None:
     reg(SERVICE_START_AUTOFOCUS, _make_simple("start_autofocus", "autofocus_start"), _BASE_SCHEMA)
     reg(SERVICE_CANCEL_AUTOFOCUS, _make_simple("cancel_autofocus", "autofocus_cancel"), _BASE_SCHEMA)
     reg(SERVICE_PLATE_SOLVE, _make_simple("plate_solve", "plate_solve"), _BASE_SCHEMA)
+    reg(SERVICE_GENERATE_DASHBOARD, _generate_dashboard, GENERATE_DASHBOARD_SCHEMA)

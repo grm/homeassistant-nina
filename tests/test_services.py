@@ -109,3 +109,63 @@ async def test_service_triggers_refresh(hass: HomeAssistant, mock_config_entry):
 
     await _call(hass, "park_mount")
     coordinator.async_request_refresh.assert_awaited_once()
+
+
+# --------------------------------------------------------------------------- #
+# generate_dashboard service                                                   #
+# --------------------------------------------------------------------------- #
+
+
+async def test_generate_dashboard_creates_and_saves(hass: HomeAssistant, mock_config_entry):
+    """The service should create a dashboard and save the built config."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    fake_dashboard = MagicMock()
+    fake_dashboard.async_save = AsyncMock()
+    dashboards_collection = MagicMock()
+
+    # First call: dashboard doesn't exist; create_item populates the dict.
+    dashboards: dict = {}
+
+    async def _create_item(payload):
+        dashboards[payload["url_path"]] = fake_dashboard
+
+    dashboards_collection.async_create_item = AsyncMock(side_effect=_create_item)
+
+    hass.data["lovelace"] = {
+        "dashboards_collection": dashboards_collection,
+        "dashboards": dashboards,
+    }
+
+    await _call(hass, "generate_dashboard", {"url_path": "nina-polaris", "title": "NINA"})
+    dashboards_collection.async_create_item.assert_awaited_once()
+    fake_dashboard.async_save.assert_awaited_once()
+    saved_config = fake_dashboard.async_save.await_args.args[0]
+    assert saved_config["title"] == "NINA Polaris"
+    assert len(saved_config["views"]) >= 1
+
+
+async def test_generate_dashboard_updates_existing(hass: HomeAssistant, mock_config_entry):
+    """If the dashboard already exists, only async_save should be called."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    fake_dashboard = MagicMock()
+    fake_dashboard.async_save = AsyncMock()
+    dashboards_collection = MagicMock()
+    dashboards_collection.async_create_item = AsyncMock()
+
+    hass.data["lovelace"] = {
+        "dashboards_collection": dashboards_collection,
+        "dashboards": {"nina-polaris": fake_dashboard},
+    }
+
+    await _call(hass, "generate_dashboard", {"url_path": "nina-polaris"})
+    dashboards_collection.async_create_item.assert_not_called()
+    fake_dashboard.async_save.assert_awaited_once()
+
+
+async def test_generate_dashboard_yaml_mode_raises(hass: HomeAssistant, mock_config_entry):
+    """In YAML mode, dashboards_collection is None and we must error out."""
+    hass.data["lovelace"] = {"dashboards_collection": None, "dashboards": {}}
+    with pytest.raises(HomeAssistantError, match="YAML mode"):
+        await _call(hass, "generate_dashboard", {})

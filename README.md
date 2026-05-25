@@ -18,7 +18,7 @@ Monitor your astrophotography sessions in real-time from Home Assistant.
 - **Live image preview** — the latest frame captured by NINA is exposed as a Camera entity, proxied through Home Assistant (no need for the browser to reach NINA directly, works fine through Nabu Casa)
 - **Action buttons** — park / unpark mount, start / stop sequence, run autofocus, plate solve
 - **Toggleable controls** — camera cooler (on / off), mount tracking (sidereal / stopped)
-- **One-click dashboard** — bundled Lovelace strategy `custom:nina-polaris` auto-generates a complete view per NINA instance
+- **One-click dashboard** — the `nina_polaris.generate_dashboard` service builds a complete Lovelace dashboard from your registry (no custom cards needed)
 - WebSocket push for instant event updates + REST polling fallback
 - Multi-instance support (multiple NINA setups, each gets its own dashboard view)
 - French and English translations
@@ -158,48 +158,43 @@ automation:
 
 ## Dashboard
 
-NINA Polaris ships with a Lovelace **strategy** (the same pattern Plex, Spotify, and Music Assistant use): the integration registers a JS module on first setup, so once installed you only need to point a dashboard at it.
+NINA Polaris generates a complete Lovelace dashboard for you with a **single service call**. No JS, no custom cards required — every card is built into Home Assistant Core.
 
-### Recommended cards (HACS)
+### One-click setup
 
-To get the same look as the screenshots, install these from HACS → Frontend:
+1. Open **Developer Tools → Actions** (or **Services**)
+2. Pick `nina_polaris.generate_dashboard`
+3. Click **Perform action**
 
-- **Mushroom** — for the chip / button cards
-- **apexcharts-card** — for the guider error plot
+A dashboard called **NINA Polaris** appears in your sidebar with one view per configured instance. Cards: equipment chips, latest camera image, mount RA/DEC, guiding history graph, focuser, sequence progress, weather, safety. You can edit it like any normal dashboard afterwards.
 
-The strategy still works without them — sections that depend on a missing card are simply omitted.
+Run the service again any time to rebuild after adding a NINA instance or new entities. It overwrites the dashboard but you can change the URL path to keep multiple variants.
 
-### Add the dashboard
+### Service options
 
-1. Go to **Settings → Dashboards → Add Dashboard → New dashboard from scratch**
-2. Open the new dashboard, click the three-dot menu → **Edit dashboard** → **Raw configuration editor**
-3. Replace the contents with:
+| Field | Default | Description |
+|---|---|---|
+| `url_path` | `nina-polaris` | URL slug for the dashboard |
+| `title` | `NINA Polaris` | Sidebar title |
+| `use_mushroom` | `false` | Replace equipment glance card with `mushroom-chips-card` (requires Mushroom from HACS) |
 
-   ```yaml
-   strategy:
-     type: custom:nina-polaris
-   ```
-
-4. Save. Each NINA instance you have configured will appear as its own view.
-
-### Strategy options
+Example (YAML):
 
 ```yaml
-strategy:
-  type: custom:nina-polaris
-  use_mushroom: true   # default true — set false to fall back to native cards
-  show_charts: true    # default true — set false to skip the apexcharts plot
-  instance: <entry_id> # optional — render a single instance instead of all
+action: nina_polaris.generate_dashboard
+data:
+  use_mushroom: true
 ```
 
-You can also use the strategy at the **view** level inside an existing dashboard:
+### Optional: prettier cards
 
-```yaml
-views:
-  - title: NINA
-    strategy:
-      type: custom:nina-polaris
-```
+The default output uses 100% native HA cards. If you want extra polish, install from HACS → Frontend:
+
+- **Mushroom** — pretty chips for equipment (set `use_mushroom: true`)
+
+### YAML mode
+
+The service requires Lovelace **storage** mode (the default). If you run `lovelace: mode: yaml`, the service refuses with a clear error — manually copy a dashboard YAML instead.
 
 ## Troubleshooting
 

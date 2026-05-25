@@ -162,3 +162,35 @@ plate_solve:
       selector:
         config_entry:
           integration: nina_polaris
+
+generate_dashboard:
+  name: Generate dashboard
+  description: >-
+    Create or refresh a Lovelace dashboard with one view per NINA Polaris
+    instance. Uses native HA cards by default; enable Mushroom for prettier
+    chips. Run again any time to rebuild after adding instances or entities.
+  fields:
+    url_path:
+      name: URL path
+      description: Dashboard URL slug (must contain a hyphen unless single-word allowed).
+      required: false
+      default: nina-polaris
+      example: nina-polaris
+      selector:
+        text:
+    title:
+      name: Title
+      description: Sidebar title for the generated dashboard.
+      required: false
+      default: NINA Polaris
+      selector:
+        text:
+    use_mushroom:
+      name: Use Mushroom cards
+      description: >-
+        Render equipment chips with Mushroom (custom:mushroom-chips-card).
+        Requires the Mushroom HACS integration.
+      required: false
+      default: false
+      selector:
+        boolean:
