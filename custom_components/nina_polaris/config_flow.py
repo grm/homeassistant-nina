@@ -5,10 +5,26 @@ from typing import Any
 
 import aiohttp
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    EntitySelector,
+    EntitySelectorConfig,
+)
 
-from .const import API_BASE_PATH, CONF_PORT, DEFAULT_PORT, DOMAIN
+from .const import (
+    API_BASE_PATH,
+    CONF_MONITORING_CAMERA_ENTITY,
+    CONF_PORT,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +33,12 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow for this entry."""
+        return NinaOptionsFlow()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -80,3 +102,29 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
             if isinstance(name, str) and name.strip():
                 return name.strip()
         return None
+
+
+class NinaOptionsFlow(OptionsFlow):
+    """Handle the options flow for NINA Polaris.
+
+    Currently lets the user pick a monitoring camera entity (e.g. an RTSP rig
+    cam set up via the Generic Camera integration) that will be embedded in
+    the auto-generated dashboard. Selecting "no camera" removes the tile.
+    """
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        if user_input is not None:
+            # An empty selector value clears the option entirely.
+            cleaned = {k: v for k, v in user_input.items() if v not in (None, "", [])}
+            return self.async_create_entry(title="", data=cleaned)
+
+        current = self.config_entry.options.get(CONF_MONITORING_CAMERA_ENTITY, "")
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MONITORING_CAMERA_ENTITY,
+                    description={"suggested_value": current},
+                ): EntitySelector(EntitySelectorConfig(domain="camera")),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

@@ -72,12 +72,33 @@ async def test_build_dashboard_config_equipment_inline_actions(hass):
     headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
     assert "Equipment" in headings and "Controls" in headings
     action_tile_entities = {
-        c.get("entity")
-        for c in cards
-        if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")
+        c.get("entity") for c in cards if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")
     }
     joined = " ".join(action_tile_entities)
     assert "park" in joined and "connect" in joined
+
+
+@pytest.mark.usefixtures("mock_config_entry")
+async def test_build_dashboard_monitoring_camera_inserted_when_option_set(hass, mock_config_entry):
+    """When the monitoring_camera_entity option is set, a picture-entity card is added."""
+    # Mutate options in place to avoid triggering the update listener (which would
+    # reload the entry mid-test). We only need build_dashboard_config to read
+    # entry.options at call time.
+    object.__setattr__(mock_config_entry, "options", {"monitoring_camera_entity": "camera.obs_cam"})
+    config = build_dashboard_config(hass)
+    cards = _all_cards(config["views"][0])
+    assert any(c.get("type") == "picture-entity" and c.get("entity") == "camera.obs_cam" for c in cards)
+    headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
+    assert "Monitoring" in headings
+
+
+@pytest.mark.usefixtures("mock_config_entry")
+async def test_build_dashboard_no_monitoring_camera_by_default(hass):
+    """Without the option, no 'Monitoring' heading is rendered."""
+    config = build_dashboard_config(hass)
+    cards = _all_cards(config["views"][0])
+    headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
+    assert "Monitoring" not in headings
 
 
 @pytest.mark.usefixtures("mock_config_entry")

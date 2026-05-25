@@ -64,8 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
         )
 
     entry.async_on_unload(websocket.async_disconnect)
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
     return True
+
+
+async def _async_options_updated(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
+    """Reload the entry when options change so the dashboard picks up changes."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:

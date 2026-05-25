@@ -21,6 +21,20 @@
       "already_configured": "Cette instance NINA est déjà configurée."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options NINA Polaris",
+        "description": "Affiche en option une caméra externe (par exemple une caméra RTSP de surveillance du télescope, configurée via l'intégration Generic Camera) en haut du dashboard pour garder un œil sur le matériel.",
+        "data": {
+          "monitoring_camera_entity": "Caméra de surveillance"
+        },
+        "data_description": {
+          "monitoring_camera_entity": "Sélectionne une entité caméra déjà configurée dans Home Assistant. Laisse vide pour retirer la tuile."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "camera_temperature": {

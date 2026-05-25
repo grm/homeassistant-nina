@@ -21,6 +21,20 @@
       "already_configured": "This NINA instance is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NINA Polaris options",
+        "description": "Optionally embed an external camera (e.g. an RTSP rig cam set up via the Generic Camera integration) at the top of the dashboard so you can keep an eye on the telescope while reviewing equipment.",
+        "data": {
+          "monitoring_camera_entity": "Monitoring camera"
+        },
+        "data_description": {
+          "monitoring_camera_entity": "Pick any camera entity already configured in Home Assistant. Leave empty to remove the tile."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "camera_temperature": {

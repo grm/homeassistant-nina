@@ -63,6 +63,12 @@ Long imaging nights, longer debugging nights — if this integration keeps **you
 3. Enter the host (IP or hostname) and port (default: 1888) of your NINA machine
 4. Done
 
+### Options (optional)
+
+Open the integration card and click **Configure** to set:
+
+- **Monitoring camera** — pick any camera entity already configured in Home Assistant (typically an RTSP rig cam set up via the built-in **Generic Camera** integration). When set, a live tile of that camera is embedded at the top of the auto-generated dashboard so you can keep an eye on the telescope while reviewing equipment.
+
 ## Entities
 
 ### Sensors

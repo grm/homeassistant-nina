@@ -17,7 +17,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
+from .const import CONF_MONITORING_CAMERA_ENTITY, DOMAIN
+
+
+def _monitoring_camera_entity(hass: HomeAssistant, entry_id: str) -> str | None:
+    """Return the optional monitoring camera entity_id from this entry's options."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        return None
+    value = entry.options.get(CONF_MONITORING_CAMERA_ENTITY)
+    if isinstance(value, str) and value.startswith("camera."):
+        return value
+    return None
 
 
 def _entities_for_entry(hass: HomeAssistant, entry_id: str) -> dict[str, str]:
@@ -442,6 +453,25 @@ def _build_view(
         if action_tiles:
             env_cards.insert(2, {"type": "heading", "heading": "Controls", "heading_style": "title"})
             env_cards.insert(3, _tile_grid(action_tiles, columns=2))
+
+    # ---- Monitoring camera (optional) ----------------------------------- #
+    # If the user configured an external camera entity in the options flow
+    # (e.g. an RTSP rig cam set up via the Generic Camera integration),
+    # embed it at the very top of the Environment column so they can see
+    # the telescope while reviewing equipment status.
+    monitoring_entity = _monitoring_camera_entity(hass, entry_id)
+    if monitoring_entity:
+        env_cards.insert(0, {"type": "heading", "heading": "Monitoring", "heading_style": "title"})
+        env_cards.insert(
+            1,
+            {
+                "type": "picture-entity",
+                "entity": monitoring_entity,
+                "show_state": False,
+                "show_name": False,
+                "camera_view": "live",
+            },
+        )
     sections: list[dict[str, Any]] = []
     if env_cards:
         sections.append({"type": "grid", "cards": env_cards, "column_span": 1})
