@@ -120,20 +120,33 @@ def _build_view(
     # We only emit a subtle subtitle on the first card.
 
     # ---- Equipment connection state -------------------------------------- #
-    connect_keys = [
-        "camera_connected",
-        "mount_connected",
-        "guider_connected",
-        "focuser_connected",
-        "filterwheel_connected",
-        "rotator_connected",
-        "dome_connected",
-        "weather_connected",
-        "safety_monitor_connected",
+    # One row per equipment: clean label on the left ("Camera", "Mount"…),
+    # state on the right ("Connected" / "Disconnected"). No truncation, no
+    # noisy "Trevinca …" prefix — the page title already says it.
+    connect_keys: list[tuple[str, str]] = [
+        ("camera_connected", "Camera"),
+        ("mount_connected", "Mount"),
+        ("guider_connected", "Guider"),
+        ("focuser_connected", "Focuser"),
+        ("filterwheel_connected", "Filter wheel"),
+        ("rotator_connected", "Rotator"),
+        ("dome_connected", "Dome"),
+        ("weather_connected", "Weather"),
+        ("safety_monitor_connected", "Safety monitor"),
     ]
-    connect_entities = [ents[k] for k in connect_keys if k in ents]
-    if connect_entities:
-        cards.append(_glance_card("Equipment", connect_entities))
+    connect_rows = [
+        {"entity": ents[key], "name": label} for key, label in connect_keys if key in ents
+    ]
+    if connect_rows:
+        cards.append(
+            {
+                "type": "entities",
+                "title": "Equipment",
+                "show_header_toggle": False,
+                "state_color": True,
+                "entities": connect_rows,
+            }
+        )
 
     # ---- Camera ---------------------------------------------------------- #
     # Robust path: lookup by registry domain
@@ -245,12 +258,14 @@ def _build_view(
             _markdown("_No NINA entities detected yet. Make sure NINA is running and the integration is connected._")
         )
 
-    # Mushroom hooks: replace the equipment glance with a chips card if requested.
-    if use_mushroom and connect_entities:
-        chips = [{"type": "entity", "entity": e, "icon_color": "blue"} for e in connect_entities]
-        # Find and replace the equipment glance card.
+    # Mushroom hooks: replace the equipment list with a chips card if requested.
+    if use_mushroom and connect_rows:
+        chips = [
+            {"type": "entity", "entity": row["entity"], "icon_color": "blue", "content_info": "name"}
+            for row in connect_rows
+        ]
         for i, c in enumerate(cards):
-            if c.get("type") == "glance" and c.get("title") == "Equipment":
+            if c.get("type") == "entities" and c.get("title") == "Equipment":
                 cards[i] = {"type": "custom:mushroom-chips-card", "chips": chips}
                 break
 

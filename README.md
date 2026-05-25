@@ -163,15 +163,19 @@ automation:
 
 ## Dashboard
 
-NINA Polaris **automatically registers a Lovelace dashboard** as soon as the integration is set up. No service to call, no JS, no custom cards — the dashboard appears in your sidebar named **NINA Polaris** with one view per configured NINA instance.
+NINA Polaris **automatically registers one Lovelace dashboard per configured NINA instance**. No service to call, no JS, no custom cards — each instance appears in your sidebar with **its own entry, named after the active NINA profile** (e.g. *Trevinca*, *TEC140*, *FRA400*).
 
-The dashboard is **regenerated on every page load** from your current entity registry, so adding/removing entities or NINA instances is reflected immediately — just reopen the dashboard.
+The dashboards are **regenerated on every page load** from your current entity registry, so adding/removing entities or NINA instances is reflected immediately — just reopen the dashboard.
 
 > Pattern: same approach as the built-in **Energy** and **Map** dashboards. Implemented as a `LovelaceConfig` subclass that rebuilds itself on every `async_load()`.
 
+### Sidebar naming
+
+The sidebar entry uses the **config entry title**, which defaults to the active NINA profile name fetched at config flow time. To change it after the fact, rename the hub in *Settings → Devices & Services → ⋮ → Rename* on the NINA Polaris integration card.
+
 ### Cards in each view
 
-- Equipment glance (camera/mount/focuser/guider/dome connection)
+- **Equipment** (vertical entities list — camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor — clean labels with `Connected` / `Disconnected` state on the right, no truncation)
 - Latest camera image
 - Mount RA/DEC + tracking actions
 - Guider RMS history graph

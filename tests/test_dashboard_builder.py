@@ -29,13 +29,27 @@ async def test_build_dashboard_config_includes_camera(hass):
 
 
 @pytest.mark.usefixtures("mock_config_entry")
+async def test_build_dashboard_config_equipment_uses_entities_card(hass):
+    """The Equipment card is a vertical entities list with friendly names."""
+    config = build_dashboard_config(hass)
+    cards = config["views"][0]["cards"]
+    eq_cards = [c for c in cards if c.get("type") == "entities" and c.get("title") == "Equipment"]
+    assert len(eq_cards) == 1, "expected exactly one Equipment entities card"
+    rows = eq_cards[0]["entities"]
+    assert all(isinstance(row, dict) and "name" in row and "entity" in row for row in rows)
+    # No truncated 'Trevinca C…' nonsense — labels are short and human.
+    names = {row["name"] for row in rows}
+    assert "Camera" in names or "Mount" in names
+
+
+@pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_mushroom_chips(hass):
     config = build_dashboard_config(hass, use_mushroom=True)
     cards = config["views"][0]["cards"]
     assert any(c.get("type") == "custom:mushroom-chips-card" for c in cards)
-    # And NOT the glance equipment card anymore
-    glance_titles = [c.get("title") for c in cards if c.get("type") == "glance"]
-    assert "Equipment" not in glance_titles
+    # And NOT the entities equipment card anymore
+    entities_titles = [c.get("title") for c in cards if c.get("type") == "entities"]
+    assert "Equipment" not in entities_titles
 
 
 async def test_build_dashboard_config_no_instances(hass):

@@ -81,6 +81,8 @@ python -m script.hassfest validate --integration-path custom_components/nina_pol
 ## Documentation
 
 - `README.md` must be kept up to date. When adding/removing entities, changing configuration, or modifying features, update the corresponding sections in the README (entities tables, features list, troubleshooting, etc.)
+- `CHANGELOG.md` (`## [Unreleased]` section) must be updated for every functional change. See the *Release Workflow* section below for the rules.
+- **Always update documentation as part of the same change**, not as a follow-up. After modifying any user-facing behaviour (entity name, label, dashboard layout, config flow text, services, etc.), check both `README.md` and `CHANGELOG.md` and update them in the same commit. A change isn't done until the docs match.
 
 ## Git Workflow
 

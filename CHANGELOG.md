@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Equipment card on the dashboard is now a vertical list instead of a glance grid.** Each row shows a clean human label on the left (`Camera`, `Mount`, `Guider`, `Focuser`, `Filter wheel`, `Rotator`, `Dome`, `Weather`, `Safety monitor`) and the connection state (`Connected` / `Disconnected`) on the right — no more truncated `Trevinca C…` labels. The connection icon turns colored when connected (state_color enabled).
 - **Config entry title now uses the active NINA profile name** (e.g. `Trevinca`, `TEC140`) instead of the generic `NINA (host:port)` label. The profile name is fetched from `/v2/api/profile/show?active=true` during the config flow. Falls back to `NINA (host:port)` if the profile endpoint is unreachable. This propagates to the integration page header, the device name, and the auto-generated dashboard sidebar entry. Existing entries can adopt the new label by renaming the hub in *Settings → Devices & Services → ⋮ → Rename* (the sidebar updates after the next reload).
 
 ## [0.2.0] - 2026-05-25
