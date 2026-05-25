@@ -47,6 +47,16 @@ async def test_dashboard_load_returns_views(hass: HomeAssistant, lovelace_ready,
     assert info["mode"] == "generated"
 
 
+async def test_dashboard_async_json_returns_fragment(hass: HomeAssistant, lovelace_ready, mock_config_entry) -> None:
+    """Regression: LovelaceConfig.async_json is abstract — must be implemented."""
+    cfg = _dashboards(hass)[NINA_DASHBOARD_URL_PATH]
+    fragment = await cfg.async_json(force=False)
+    # async_json must succeed and return some kind of value (json_fragment).
+    # The exact type depends on HA version; what matters is no abstract-method
+    # error and no crash.
+    assert fragment is not None
+
+
 async def test_dashboard_rebuilds_on_each_load(hass: HomeAssistant, lovelace_ready, mock_config_entry) -> None:
     cfg = _dashboards(hass)[NINA_DASHBOARD_URL_PATH]
     with patch(

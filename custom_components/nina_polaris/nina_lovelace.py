@@ -26,6 +26,7 @@ from homeassistant.components.lovelace.const import (
 )
 from homeassistant.components.lovelace.dashboard import LovelaceConfig
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_bytes, json_fragment
 
 from .dashboard_builder import build_dashboard_config
 
@@ -70,6 +71,15 @@ class NinaLovelaceConfig(LovelaceConfig):
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Build the dashboard fresh from the registry every call."""
         return build_dashboard_config(self.hass)
+
+    async def async_json(self, force: bool) -> json_fragment:
+        """Return JSON-serialized config (called by the WS API).
+
+        We rebuild every time and never cache — the registry is the source
+        of truth, and a Lovelace config is small enough that re-encoding is
+        cheap compared to a stale dashboard.
+        """
+        return json_fragment(json_bytes(await self.async_load(force)))
 
     # async_save / async_delete are inherited (raise HomeAssistantError) —
     # this dashboard is not user-editable through the UI Raw Config Editor.

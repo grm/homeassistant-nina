@@ -53,8 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     # register the same panel twice.
     domain_state = hass.data.setdefault(DOMAIN, {})
     if not domain_state.get("dashboard_registered"):
-        async_register_dashboard(hass)
-        domain_state["dashboard_registered"] = True
+        try:
+            async_register_dashboard(hass)
+            domain_state["dashboard_registered"] = True
+        except Exception:  # noqa: BLE001 — never block entry setup on a UI-only feature
+            _LOGGER.exception(
+                "Failed to register the NINA Polaris auto-dashboard. "
+                "The integration is otherwise fully functional; entities "
+                "and services are still available."
+            )
 
     entry.async_on_unload(websocket.async_disconnect)
 
