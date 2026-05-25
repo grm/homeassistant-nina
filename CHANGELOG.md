@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`mount_time_to_flip` was reported in `min` but NINA actually returns hours.** The displayed value `11.52 min` was actually 11h30m (≈691 min). The sensor now declares `device_class: duration` with `UnitOfTime.HOURS`, so Home Assistant displays it correctly and lets users convert to minutes/seconds in the UI.
+
 ## [0.6.1] - 2026-05-25
 
 ### Fixed

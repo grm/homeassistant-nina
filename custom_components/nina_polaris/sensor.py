@@ -15,6 +15,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,7 +86,9 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="mount_time_to_flip",
         translation_key="mount_time_to_flip",
-        native_unit_of_measurement="min",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
