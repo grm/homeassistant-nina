@@ -362,10 +362,15 @@ function buildWeatherCard(inst, opts) {
 
 // ---------------------------------------------------------------------------
 
-function safeDefine(name, cls) {
-  if (!customElements.get(name)) customElements.define(name, cls);
-}
+// Each customElements.define needs a unique constructor, so alias via subclass.
+class NinaPolarisViewStrategyLegacy extends NinaPolarisViewStrategy {}
 
-safeDefine("ll-strategy-dashboard-nina-polaris", NinaPolarisDashboardStrategy);
-safeDefine("ll-strategy-view-nina-polaris", NinaPolarisViewStrategy);
-safeDefine("ll-strategy-nina-polaris", NinaPolarisViewStrategy);
+if (!customElements.get("ll-strategy-dashboard-nina-polaris")) {
+  customElements.define("ll-strategy-dashboard-nina-polaris", NinaPolarisDashboardStrategy);
+}
+if (!customElements.get("ll-strategy-view-nina-polaris")) {
+  customElements.define("ll-strategy-view-nina-polaris", NinaPolarisViewStrategy);
+}
+if (!customElements.get("ll-strategy-nina-polaris")) {
+  customElements.define("ll-strategy-nina-polaris", NinaPolarisViewStrategyLegacy);
+}
