@@ -1,5 +1,8 @@
 """NINA REST API client."""
 
+import base64
+import binascii
+import json
 import logging
 from typing import Any
 
@@ -38,18 +41,44 @@ class NinaApiClient:
             return data.get("Response")
 
     async def _get_bytes(self, path: str) -> bytes | None:
-        """GET a binary endpoint (image), returns raw bytes or None on error."""
+        """GET a binary endpoint (image), returns raw bytes or None on error.
+
+        NINA's /image/* endpoints return one of two shapes depending on the
+        plugin version / route:
+          - Raw image bytes with Content-Type: image/png|jpeg
+          - A JSON envelope {"Response": "<base64 PNG>", "Success": true, ...}
+        We accept both transparently.
+        """
         url = f"{self.base_url}{path}"
         _LOGGER.debug("GET (bytes) %s", url)
         try:
             async with self.session.get(url) as resp:
                 resp.raise_for_status()
                 content_type = resp.headers.get("Content-Type", "")
-                if not content_type.startswith("image/"):
-                    # Server returned the JSON envelope instead of the image (e.g. error)
-                    _LOGGER.debug("Image endpoint returned non-image content-type: %s", content_type)
-                    return None
-                return await resp.read()
+                if content_type.startswith("image/"):
+                    return await resp.read()
+                if "json" in content_type or content_type == "":
+                    # JSON envelope with a base64 image payload.
+                    raw = await resp.read()
+                    try:
+                        payload = json.loads(raw)
+                    except (ValueError, json.JSONDecodeError) as err:
+                        _LOGGER.debug("Image endpoint JSON decode failed: %s", err)
+                        return None
+                    response = payload.get("Response") if isinstance(payload, dict) else None
+                    if not isinstance(response, str) or not response:
+                        _LOGGER.debug(
+                            "Image JSON envelope missing 'Response' string (success=%s)",
+                            payload.get("Success") if isinstance(payload, dict) else "?",
+                        )
+                        return None
+                    try:
+                        return base64.b64decode(response, validate=False)
+                    except (binascii.Error, ValueError) as err:
+                        _LOGGER.debug("Image base64 decode failed: %s", err)
+                        return None
+                _LOGGER.debug("Image endpoint returned unsupported content-type: %s", content_type)
+                return None
         except aiohttp.ClientError as err:
             _LOGGER.debug("Image fetch failed for %s: %s", path, err)
             return None
