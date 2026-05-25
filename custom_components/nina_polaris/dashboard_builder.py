@@ -225,6 +225,39 @@ def _build_view(
     if cam_tiles:
         img_cards.append(_tile_grid(cam_tiles, columns=2))
 
+    # ---- Last image metrics --------------------------------------------- #
+    last_image_keys = (
+        "latest_image_hfr",
+        "latest_image_stars",
+        "latest_image_filter",
+        "latest_image_exposure_time",
+        "latest_image_mean",
+        "latest_image_median",
+        "latest_image_stdev",
+        "latest_image_temperature",
+        "latest_image_guiding_rms",
+    )
+    if any(k in ents for k in last_image_keys):
+        img_cards.append({"type": "heading", "heading": "Last image", "heading_style": "title"})
+        last_image_layout: list[tuple[str, str, str, str | None]] = [
+            ("latest_image_hfr", "HFR", "mdi:star-four-points", "amber"),
+            ("latest_image_stars", "Stars", "mdi:star-shooting", "amber"),
+            ("latest_image_filter", "Filter", "mdi:filter", "indigo"),
+            ("latest_image_exposure_time", "Exposure", "mdi:timer-outline", "blue"),
+            ("latest_image_guiding_rms", "Guiding RMS", "mdi:crosshairs", "green"),
+            ("latest_image_temperature", "Sensor temp", "mdi:thermometer-low", "blue"),
+            ("latest_image_mean", "Mean", "mdi:sigma-lower", "blue-grey"),
+            ("latest_image_median", "Median", "mdi:sigma", "blue-grey"),
+            ("latest_image_stdev", "Std dev", "mdi:chart-bell-curve", "blue-grey"),
+        ]
+        last_image_tiles = [
+            _tile(ents[key], label, icon=icon, color=color)
+            for key, label, icon, color in last_image_layout
+            if key in ents
+        ]
+        if last_image_tiles:
+            img_cards.append(_tile_grid(last_image_tiles, columns=2))
+
     if any(k in ents for k in ("focuser_position", "focuser_temperature")):
         img_cards.append({"type": "heading", "heading": "Focuser", "heading_style": "title"})
         focus_tiles: list[dict[str, Any]] = []
@@ -237,13 +270,24 @@ def _build_view(
 
     if any(k in ents for k in ("sequence_running", "sequence_target", "sequence_start", "sequence_stop")):
         img_cards.append({"type": "heading", "heading": "Sequence", "heading_style": "title"})
-        seq_status_tiles: list[dict[str, Any]] = []
-        if "sequence_running" in ents:
-            seq_status_tiles.append(_tile(ents["sequence_running"], "Running", icon="mdi:play-circle", color="green"))
+        # Target tile: full-width, prominent — what's currently being imaged is
+        # the single most important piece of session info.
         if "sequence_target" in ents:
-            seq_status_tiles.append(_tile(ents["sequence_target"], "Target", icon="mdi:bullseye-arrow", color="indigo"))
-        if seq_status_tiles:
-            img_cards.append(_tile_grid(seq_status_tiles, columns=2))
+            img_cards.append(
+                _tile(
+                    ents["sequence_target"],
+                    "Current target",
+                    icon="mdi:bullseye-arrow",
+                    color="indigo",
+                )
+            )
+        if "sequence_running" in ents:
+            img_cards.append(
+                _tile_grid(
+                    [_tile(ents["sequence_running"], "Running", icon="mdi:play-circle", color="green")],
+                    columns=2,
+                )
+            )
 
         seq_action_tiles: list[dict[str, Any]] = []
         if "sequence_start" in ents:

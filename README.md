@@ -186,10 +186,11 @@ The view uses HA's responsive `sections` layout: **3 columns on desktop, 1 colum
 
 - **Equipment** — connection state of every NINA device (camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor) as a single `entities` list, no truncation
 - **Camera** — latest image (`picture-entity`) + Sensor temp / Cooler power / Cooler / Exposing tiles
+- **Last image** — HFR, Stars, Filter, Exposure, Guiding RMS, Sensor temp, Mean, Median, Std dev — refreshed automatically when NINA saves a new frame (`IMAGE-SAVE` websocket event)
 - **Mount** — RA, Dec, Altitude, Azimuth, Meridian flip, Tracking, Slewing tiles + a Park/Unpark row (Parked state + Park button + Unpark button on a single horizontal line)
 - **Guiding** — RA error / Dec error tiles + a 2-hour history graph
 - **Focuser** — Position / Temperature tiles
-- **Sequence** — Running / Target tiles + Start / Stop action tiles
+- **Sequence** — full-width **Current target** tile + Running tile + Start / Stop action tiles
 - **Weather** — Temp, Humidity, Pressure, Dew point, Wind, SQM, Sky temp tiles (3-column grid)
 - **Safety** — Safe-to-image tile
 

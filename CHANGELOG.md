@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Latest image metrics sensors.** New sensors expose key statistics from the most recently saved frame so you can monitor session quality without leaving Home Assistant: `latest_image_hfr` (px), `latest_image_stars`, `latest_image_filter`, `latest_image_exposure_time` (s), `latest_image_mean`, `latest_image_median`, `latest_image_stdev`, `latest_image_temperature` (°C, sensor temp during exposure) and `latest_image_guiding_rms` (″, parsed from NINA's `RmsText`). Metadata is fetched once per new image (cached on the index, no spam) via `/image-history?index=N`. Translations: EN + FR.
+- **Dashboard "Last image" section** in the Imaging column rendering all nine new sensors as a 2-column tile grid (HFR, Stars, Filter, Exposure, Guiding RMS, Sensor temp, Mean, Median, Std dev) with topic-appropriate MDI icons.
+- **Prominent "Current target" tile** at the top of the Sequence section — the most important piece of session info now occupies its own full-width row instead of a half-tile cell.
 
 ### Changed
 
