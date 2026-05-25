@@ -42,7 +42,12 @@ async def test_build_dashboard_config_equipment_uses_entities_card(hass):
     """The Equipment card is a vertical entities list with friendly names."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    eq_cards = [c for c in cards if c.get("type") == "entities" and c.get("title") == "Equipment"]
+    eq_cards = [
+        c
+        for c in cards
+        if c.get("type") == "entities"
+        and any(row.get("name") in {"Camera", "Mount", "Guider"} for row in c.get("entities", []))
+    ]
     assert len(eq_cards) == 1, "expected exactly one Equipment entities card"
     rows = eq_cards[0]["entities"]
     assert all(isinstance(row, dict) and "name" in row and "entity" in row for row in rows)

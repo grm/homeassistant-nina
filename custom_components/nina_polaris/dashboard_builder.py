@@ -225,6 +225,16 @@ def _build_view(
     if cam_tiles:
         img_cards.append(_tile_grid(cam_tiles, columns=2))
 
+    if any(k in ents for k in ("focuser_position", "focuser_temperature")):
+        img_cards.append({"type": "heading", "heading": "Focuser", "heading_style": "title"})
+        focus_tiles: list[dict[str, Any]] = []
+        if "focuser_position" in ents:
+            focus_tiles.append(_tile(ents["focuser_position"], "Position", icon="mdi:focus-field", color="purple"))
+        if "focuser_temperature" in ents:
+            focus_tiles.append(_tile(ents["focuser_temperature"], "Temperature", icon="mdi:thermometer", color="cyan"))
+        if focus_tiles:
+            img_cards.append(_tile_grid(focus_tiles, columns=2))
+
     if any(k in ents for k in ("sequence_running", "sequence_target", "sequence_start", "sequence_stop")):
         img_cards.append({"type": "heading", "heading": "Sequence", "heading_style": "title"})
         seq_status_tiles: list[dict[str, Any]] = []
@@ -315,20 +325,7 @@ def _build_view(
             point_cards.append(_tile_grid(guide_tiles, columns=2))
         point_cards.append(_history_card("Guiding error (arcsec)", guide_entities, hours=2))
 
-    if any(k in ents for k in ("focuser_position", "focuser_temperature")):
-        point_cards.append({"type": "heading", "heading": "Focuser", "heading_style": "title"})
-        focus_tiles: list[dict[str, Any]] = []
-        if "focuser_position" in ents:
-            focus_tiles.append(_tile(ents["focuser_position"], "Position", icon="mdi:focus-field", color="purple"))
-        if "focuser_temperature" in ents:
-            focus_tiles.append(_tile(ents["focuser_temperature"], "Temperature", icon="mdi:thermometer", color="cyan"))
-        if focus_tiles:
-            point_cards.append(_tile_grid(focus_tiles, columns=2))
-
-    # Equipment connection state (compact list, kept at the bottom of Pointing)
-    # One row per equipment: clean label on the left ("Camera", "Mount"…),
-    # state on the right ("Connected" / "Disconnected"). No truncation, no
-    # noisy "Trevinca …" prefix — the page title already says it.
+    # Equipment connection state — shown above Weather in the Environment column.
     connect_keys: list[tuple[str, str]] = [
         ("camera_connected", "Camera"),
         ("mount_connected", "Mount"),
@@ -361,7 +358,13 @@ def _build_view(
             ],
         }
     if equipment_card is not None:
-        point_cards.append(equipment_card)
+        # Equipment list shown ABOVE Weather in the Environment column.
+        env_cards.insert(0, {"type": "heading", "heading": "Equipment", "heading_style": "title"})
+        # The 'entities' card already has its own "Equipment" title; drop it to
+        # avoid duplication with the heading card.
+        if equipment_card.get("type") == "entities":
+            equipment_card.pop("title", None)
+        env_cards.insert(1, equipment_card)
 
     # ---- Assemble multi-column 'sections' view --------------------------- #
     sections: list[dict[str, Any]] = []
