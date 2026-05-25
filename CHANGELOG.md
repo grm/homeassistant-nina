@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-25
+
 ### Changed
 
 - **Dashboard equipment layout reverted to a compact list** with a separate **Controls** section underneath. The 0.5.0 per-device vertical-stack layout was visually noisy (duplicated `Trevinca …` prefixes, truncated labels in narrow columns). Equipment is now back to a single `entities` list of all devices, followed by a 2-column tile grid of action buttons (connect/disconnect, park/unpark, autofocus, guider start/stop, dome open/close, etc.). Action tiles use short labels (`Connect cam`, `Park`, `Autofocus`) and remain gated on their parent device's `Connected` state — a tile is greyed out when its device is offline.
