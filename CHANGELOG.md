@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-25
+
 ### Changed
 
 - **Dashboard now uses a 3-column responsive `sections` view** (HA 2024.3+). On desktop, the dashboard reflows into three side-by-side columns instead of one tall single column; on mobile/tabl...[truncated]
