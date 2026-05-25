@@ -75,20 +75,23 @@ class NinaPolarisViewStrategy extends HTMLElement {
 // ---------------------------------------------------------------------------
 
 function collectInstances(hass, onlyEntryId) {
-  const grouped = new Map();
-  // hass.entities is keyed by entity_id, each entry has a config_entry_id.
+  // Group our entities by device_id (available in the frontend display entry).
+  // config_entry_id is NOT present in the display-format entity registry,
+  // so we resolve it via the device registry instead.
+  const byDevice = new Map();
   for (const entity of Object.values(hass.entities || {})) {
     if (!entity || entity.platform !== DOMAIN) continue;
-    const entryId = entity.config_entry_id;
-    if (!entryId) continue;
-    if (onlyEntryId && entryId !== onlyEntryId) continue;
-    if (!grouped.has(entryId)) grouped.set(entryId, []);
-    grouped.get(entryId).push(entity.entity_id);
+    const deviceId = entity.device_id;
+    if (!deviceId) continue;
+    if (!byDevice.has(deviceId)) byDevice.set(deviceId, []);
+    byDevice.get(deviceId).push(entity.entity_id);
   }
 
   const results = [];
-  for (const [entryId, entityIds] of grouped) {
-    const device = findDevice(hass, entryId);
+  for (const [deviceId, entityIds] of byDevice) {
+    const device = (hass.devices || {})[deviceId];
+    const entryId = device?.config_entries?.[0] || deviceId;
+    if (onlyEntryId && entryId !== onlyEntryId) continue;
     results.push({
       entry_id: entryId,
       title: device?.name_by_user || device?.name || "NINA",
@@ -98,12 +101,6 @@ function collectInstances(hass, onlyEntryId) {
   return results;
 }
 
-function findDevice(hass, entryId) {
-  for (const dev of Object.values(hass.devices || {})) {
-    if ((dev.config_entries || []).includes(entryId)) return dev;
-  }
-  return null;
-}
 
 /**
  * Index entity_ids by their NINA "key" suffix.
