@@ -1,0 +1,8 @@
+homeassistant
+aiohttp>=3.9.0
+voluptuous>=0.13.0
+pytest>=7.0.0
+pytest-asyncio>=0.23.0
+pytest-homeassistant-custom-component>=0.13.0
+mypy>=1.8.0
+ruff>=0.3.0

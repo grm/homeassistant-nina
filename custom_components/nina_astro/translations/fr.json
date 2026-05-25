@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion à NINA",
+        "description": "Entrez les informations de connexion de votre instance NINA.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Nom d'hôte ou adresse IP de la machine exécutant NINA",
+          "port": "Port de l'API (par défaut : 1888)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à NINA. Vérifiez que l'hôte et le port sont corrects et que NINA est en cours d'exécution avec le plugin API activé."
+    },
+    "abort": {
+      "already_configured": "Cette instance NINA est déjà configurée."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "camera_temperature": { "name": "Température caméra" },
+      "camera_cooler_power": { "name": "Puissance refroidissement caméra" },
+      "guider_ra_distance": { "name": "Distance guidage AD" },
+      "guider_dec_distance": { "name": "Distance guidage Déc" },
+      "focuser_position": { "name": "Position focuser" },
+      "focuser_temperature": { "name": "Température focuser" },
+      "mount_ra": { "name": "Ascension droite monture" },
+      "mount_dec": { "name": "Déclinaison monture" },
+      "mount_altitude": { "name": "Altitude monture" },
+      "mount_azimuth": { "name": "Azimut monture" },
+      "mount_time_to_flip": { "name": "Temps avant retournement méridien" },
+      "sequence_target": { "name": "Cible actuelle de la séquence" },
+      "weather_temperature": { "name": "Température extérieure" },
+      "weather_humidity": { "name": "Humidité" },
+      "weather_pressure": { "name": "Pression atmosphérique" },
+      "weather_dewpoint": { "name": "Point de rosée" },
+      "weather_wind_speed": { "name": "Vitesse du vent" },
+      "weather_sky_quality": { "name": "Qualité du ciel (SQM)" },
+      "weather_sky_temperature": { "name": "Température du ciel" }
+    },
+    "binary_sensor": {
+      "camera_connected": { "name": "Caméra connectée" },
+      "mount_connected": { "name": "Monture connectée" },
+      "guider_connected": { "name": "Guideur connecté" },
+      "focuser_connected": { "name": "Focuser connecté" },
+      "filterwheel_connected": { "name": "Roue à filtres connectée" },
+      "dome_connected": { "name": "Dôme connecté" },
+      "rotator_connected": { "name": "Rotateur connecté" },
+      "weather_connected": { "name": "Station météo connectée" },
+      "safety_monitor_connected": { "name": "Moniteur de sécurité connecté" },
+      "safety_is_safe": { "name": "Observatoire sécurisé" },
+      "sequence_running": { "name": "Séquence en cours" },
+      "mount_tracking": { "name": "Suivi monture actif" },
+      "mount_slewing": { "name": "Monture en déplacement" },
+      "mount_at_park": { "name": "Monture parquée" },
+      "camera_exposing": { "name": "Caméra en exposition" },
+      "camera_cooler_on": { "name": "Refroidissement caméra actif" }
+    }
+  }
+}

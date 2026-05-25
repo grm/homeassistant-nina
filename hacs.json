@@ -1,0 +1,7 @@
+{
+  "name": "NINA Astrophotography",
+  "homeassistant": "2024.1.0",
+  "hacs": "2.0.0",
+  "content_in_root": false,
+  "zip_release": false
+}

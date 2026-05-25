@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(pytest*)",
+      "Bash(ruff*)",
+      "Bash(mypy*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(find*)",
+      "Bash(grep*)",
+      "Bash(ls*)",
+      "Bash(cat api_spec.yaml*)",
+      "Bash(cat websocket_spec.yaml*)"
+    ]
+  }
+}

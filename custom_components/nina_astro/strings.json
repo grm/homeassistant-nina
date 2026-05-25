@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to NINA",
+        "description": "Enter the connection details for your NINA instance.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the machine running NINA",
+          "port": "API port (default: 1888)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to NINA. Verify the host and port are correct and NINA is running with the API plugin enabled."
+    },
+    "abort": {
+      "already_configured": "This NINA instance is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "camera_temperature": { "name": "Camera temperature" },
+      "camera_cooler_power": { "name": "Camera cooler power" },
+      "guider_ra_distance": { "name": "Guider RA distance" },
+      "guider_dec_distance": { "name": "Guider Dec distance" },
+      "focuser_position": { "name": "Focuser position" },
+      "focuser_temperature": { "name": "Focuser temperature" },
+      "mount_ra": { "name": "Mount RA" },
+      "mount_dec": { "name": "Mount Dec" },
+      "mount_altitude": { "name": "Mount altitude" },
+      "mount_azimuth": { "name": "Mount azimuth" },
+      "mount_time_to_flip": { "name": "Time to meridian flip" },
+      "sequence_target": { "name": "Sequence current target" },
+      "weather_temperature": { "name": "Weather temperature" },
+      "weather_humidity": { "name": "Weather humidity" },
+      "weather_pressure": { "name": "Weather pressure" },
+      "weather_dewpoint": { "name": "Weather dew point" },
+      "weather_wind_speed": { "name": "Weather wind speed" },
+      "weather_sky_quality": { "name": "Sky quality (SQM)" },
+      "weather_sky_temperature": { "name": "Sky temperature" }
+    },
+    "binary_sensor": {
+      "camera_connected": { "name": "Camera connected" },
+      "mount_connected": { "name": "Mount connected" },
+      "guider_connected": { "name": "Guider connected" },
+      "focuser_connected": { "name": "Focuser connected" },
+      "filterwheel_connected": { "name": "Filter wheel connected" },
+      "dome_connected": { "name": "Dome connected" },
+      "rotator_connected": { "name": "Rotator connected" },
+      "weather_connected": { "name": "Weather station connected" },
+      "safety_monitor_connected": { "name": "Safety monitor connected" },
+      "safety_is_safe": { "name": "Observatory safe" },
+      "sequence_running": { "name": "Sequence running" },
+      "mount_tracking": { "name": "Mount tracking" },
+      "mount_slewing": { "name": "Mount slewing" },
+      "mount_at_park": { "name": "Mount parked" },
+      "camera_exposing": { "name": "Camera exposing" },
+      "camera_cooler_on": { "name": "Camera cooler on" }
+    }
+  }
+}
