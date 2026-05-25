@@ -226,6 +226,12 @@ ruff check custom_components/nina_polaris/
 mypy custom_components/nina_polaris/
 ```
 
+## ☕ Support
+
+Long imaging nights, longer debugging nights — if this integration keeps **your scope** pointing the right way, consider buying me a coffee to keep **the developer** pointing the right way too. Bonus: every coffee fuels one more session before clouds roll in.
+
+<a href="https://www.buymeacoffee.com/1vhnvriwe"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="45" alt="Buy Me A Coffee" /></a> <a href="https://paypal.me/grmklein"><img src="https://img.shields.io/badge/paypal-donate-yellow.svg" height="30" alt="PayPal" /></a>
+
 ## License
 
 MIT

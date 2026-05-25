@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dashboard layout reordered.** The Focuser card is now grouped under the Camera section in the Imaging column (focus belongs to imaging, not pointing). The Equipment connection list moves to the top of the Environment column, above Weather, so a glance at the left column tells you what's connected and what the sky is doing.
+
+### Added
+
+- README: support / donations section (Buy Me A Coffee + PayPal) for users who want to thank the maintainer.
+
 ## [0.4.0] - 2026-05-25
 
 ### Changed
