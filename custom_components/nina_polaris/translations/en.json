@@ -60,6 +60,9 @@
       "mount_at_park": { "name": "Mount parked" },
       "camera_exposing": { "name": "Camera exposing" },
       "camera_cooler_on": { "name": "Camera cooler on" }
+    },
+    "camera": {
+      "latest_image": { "name": "Latest image" }
     }
   }
 }

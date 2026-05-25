@@ -37,6 +37,23 @@ class NinaApiClient:
             _LOGGER.debug("API response from %s: keys=%s", path, _summarize(data.get("Response")))
             return data.get("Response")
 
+    async def _get_bytes(self, path: str) -> bytes | None:
+        """GET a binary endpoint (image), returns raw bytes or None on error."""
+        url = f"{self.base_url}{path}"
+        _LOGGER.debug("GET (bytes) %s", url)
+        try:
+            async with self.session.get(url) as resp:
+                resp.raise_for_status()
+                content_type = resp.headers.get("Content-Type", "")
+                if not content_type.startswith("image/"):
+                    # Server returned the JSON envelope instead of the image (e.g. error)
+                    _LOGGER.debug("Image endpoint returned non-image content-type: %s", content_type)
+                    return None
+                return await resp.read()
+        except aiohttp.ClientError as err:
+            _LOGGER.debug("Image fetch failed for %s: %s", path, err)
+            return None
+
     async def get_version(self) -> str:
         return await self._get("/version")
 
@@ -65,7 +82,37 @@ class NinaApiClient:
         return await self._get("/equipment/weather/info")
 
     async def get_image_history(self) -> list[dict[str, Any]]:
-        return await self._get("/image-history")
+        return await self._get("/image-history?all=true")
+
+    async def get_image_history_count(self) -> int:
+        """Return the number of images in NINA's image history."""
+        result = await self._get("/image-history?count=true")
+        # NINA returns {"Count": N} or just an int depending on version
+        if isinstance(result, dict):
+            return int(result.get("Count", 0))
+        if isinstance(result, int):
+            return result
+        return 0
+
+    async def get_image_bytes(
+        self,
+        index: int,
+        *,
+        quality: int = 85,
+        resize: bool = False,
+        size: str | None = None,
+    ) -> bytes | None:
+        """Fetch a JPEG image from NINA at the given history index."""
+        params = [f"quality={quality}"]
+        if resize:
+            params.append("resize=true")
+            if size:
+                params.append(f"size={size}")
+        return await self._get_bytes(f"/image/{index}?{'&'.join(params)}")
+
+    async def get_image_thumbnail(self, index: int) -> bytes | None:
+        """Fetch the thumbnail for a given image history index."""
+        return await self._get_bytes(f"/image/thumbnail/{index}")
 
     async def close(self) -> None:
         if self._session and not self._session.closed:

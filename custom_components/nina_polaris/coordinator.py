@@ -62,6 +62,7 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_client = api_client
         self.websocket = websocket
         self.websocket.set_callback(self._on_websocket_event)
+        self.latest_image_index: int | None = None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NINA API."""
@@ -70,6 +71,14 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             sequence_raw = await self.api_client.get_sequence_state()
 
             sequence = _parse_sequence_state(sequence_raw)
+
+            # Refresh latest image index (NINA history is 0-indexed; latest = count-1)
+            try:
+                count = await self.api_client.get_image_history_count()
+                if count > 0:
+                    self.latest_image_index = count - 1
+            except Exception as img_err:  # noqa: BLE001
+                _LOGGER.debug("Could not fetch image history count: %s", img_err)
 
             _LOGGER.debug(
                 "NINA update: camera_connected=%s, mount_connected=%s, "
@@ -92,4 +101,14 @@ class NinaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle incoming WebSocket events."""
         event_type = event.get("Event", "unknown")
         _LOGGER.debug("WebSocket event received: %s", event_type)
+
+        # On IMAGE-SAVE, NINA appends a new image to the history.
+        # Bump latest_image_index so the camera entity refreshes.
+        if event_type == "IMAGE-SAVE":
+            if self.latest_image_index is None:
+                self.latest_image_index = 0
+            else:
+                self.latest_image_index += 1
+            _LOGGER.debug("New image saved, latest_image_index=%s", self.latest_image_index)
+
         self.async_set_updated_data({**self.data, "last_event": event} if self.data else {"last_event": event})

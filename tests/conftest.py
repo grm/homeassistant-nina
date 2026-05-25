@@ -84,6 +84,8 @@ def mock_nina_api():
     client.get_nina_version = AsyncMock(return_value="3.2.0.9001")
     client.get_equipment_info = AsyncMock(return_value=MOCK_EQUIPMENT_DATA)
     client.get_sequence_state = AsyncMock(return_value=MOCK_SEQUENCE_RAW)
+    client.get_image_history_count = AsyncMock(return_value=0)
+    client.get_image_bytes = AsyncMock(return_value=b"\xff\xd8\xff\xe0FAKEJPEG")
     client.close = AsyncMock()
     return client
 

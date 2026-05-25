@@ -38,6 +38,7 @@ def coordinator(mock_hass, mock_entry, mock_nina_api, mock_websocket):
         coord.name = DOMAIN
         coord.data = None
         coord.async_set_updated_data = MagicMock()
+        coord.latest_image_index = None
         return coord
 
 
@@ -135,3 +136,16 @@ class TestCoordinatorWebSocket:
         coordinator.async_set_updated_data.assert_called_once()
         call_data = coordinator.async_set_updated_data.call_args[0][0]
         assert call_data == {"last_event": event}
+
+    def test_image_save_event_bumps_index(self, coordinator):
+        coordinator.latest_image_index = None
+        coordinator._on_websocket_event({"Event": "IMAGE-SAVE", "Response": {}})
+        assert coordinator.latest_image_index == 0
+
+        coordinator._on_websocket_event({"Event": "IMAGE-SAVE", "Response": {}})
+        assert coordinator.latest_image_index == 1
+
+    def test_non_image_event_does_not_change_index(self, coordinator):
+        coordinator.latest_image_index = 7
+        coordinator._on_websocket_event({"Event": "FOCUSER-MOVED", "Response": {}})
+        assert coordinator.latest_image_index == 7

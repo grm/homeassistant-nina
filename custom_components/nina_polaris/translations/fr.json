@@ -60,6 +60,9 @@
       "mount_at_park": { "name": "Monture parquée" },
       "camera_exposing": { "name": "Caméra en exposition" },
       "camera_cooler_on": { "name": "Refroidissement caméra actif" }
+    },
+    "camera": {
+      "latest_image": { "name": "Dernière image" }
     }
   }
 }
