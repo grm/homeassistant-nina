@@ -1,6 +1,7 @@
 """NINA Polaris integration for Home Assistant."""
 
 import logging
+from contextlib import suppress
 from pathlib import Path
 
 from homeassistant.components.frontend import add_extra_js_url
@@ -35,34 +36,65 @@ DASHBOARD_URL = f"{DASHBOARD_URL_PATH}?v=20260525d"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the dashboard strategy JS early, before any page is served."""
     js_path = Path(__file__).parent / "dashboard" / "nina-polaris.js"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(DASHBOARD_URL_PATH, str(js_path), False)]
-    )
-    # Register via both mechanisms for maximum compatibility:
-    # 1. add_extra_js_url injects into index.html <script> tags
-    add_extra_js_url(hass, DASHBOARD_URL)
-    # 2. Also register as a Lovelace resource (loaded by load_resource.ts)
-    hass.data.setdefault("lovelace_resources", set()).add(DASHBOARD_URL)
+    if hass.http is not None:
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(DASHBOARD_URL_PATH, str(js_path), False)]
+        )
+    # add_extra_js_url injects into index.html <script> tags.
+    with suppress(KeyError, AttributeError):
+        add_extra_js_url(hass, DASHBOARD_URL)
     _LOGGER.debug("Registered dashboard strategy JS at %s", DASHBOARD_URL)
     return True
 
 
 async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
     """Ensure our JS is registered as a Lovelace resource."""
+    lovelace_data = hass.data.get("lovelace")
+    if lovelace_data is None:
+        _LOGGER.warning(
+            "Lovelace not initialized yet — skipping resource registration. "
+            "Dashboard strategy will rely on add_extra_js_url injection."
+        )
+        return
+
+    # Support both legacy dict layout and modern LovelaceData dataclass.
+    if isinstance(lovelace_data, dict):
+        resources = lovelace_data.get("resources")
+    else:
+        resources = getattr(lovelace_data, "resources", None)
+
+    if resources is None:
+        _LOGGER.warning(
+            "Lovelace resources collection not found (mode=%s). "
+            "Dashboard strategy will rely on add_extra_js_url injection.",
+            type(lovelace_data).__name__,
+        )
+        return
+
+    # YAML-mode resources collection has no async_create_item.
+    if not hasattr(resources, "async_create_item"):
+        _LOGGER.warning(
+            "Lovelace is in YAML mode — add this to configuration.yaml manually:\n"
+            "lovelace:\n  resources:\n    - url: %s\n      type: module",
+            DASHBOARD_URL,
+        )
+        return
+
     try:
-        resources = hass.data["lovelace"]["resources"]
         if not resources.loaded:
             await resources.async_load()
             resources.loaded = True
-        # Check if already registered
         for item in resources.async_items():
             if DASHBOARD_URL_PATH in item.get("url", ""):
+                _LOGGER.info("Dashboard strategy resource already registered")
                 return
-        # Add as a module resource
         await resources.async_create_item({"res_type": "module", "url": DASHBOARD_URL})
-        _LOGGER.info("Added dashboard strategy as Lovelace resource")
-    except (KeyError, AttributeError, TypeError) as err:
-        _LOGGER.debug("Could not register Lovelace resource: %s", err)
+        _LOGGER.warning(
+            "Registered NINA Polaris dashboard strategy as Lovelace resource: %s",
+            DASHBOARD_URL,
+        )
+    except Exception:  # noqa: BLE001 — surface the real cause
+        _LOGGER.exception("Failed to register dashboard strategy Lovelace resource")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:

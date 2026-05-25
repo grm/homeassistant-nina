@@ -116,26 +116,23 @@ class TestCoordinatorUpdate:
 class TestCoordinatorWebSocket:
     """Test coordinator WebSocket handling."""
 
-    def test_websocket_callback_sets_data(self, coordinator):
+    def test_websocket_callback_triggers_refresh(self, coordinator):
         coordinator.data = {"equipment": MOCK_EQUIPMENT_DATA, "sequence": MOCK_SEQUENCE_PARSED}
+        coordinator.hass.async_create_task = MagicMock()
         event = {"Event": "IMAGE-SAVE", "Response": {"FileName": "light_001.fits"}}
 
         coordinator._on_websocket_event(event)
 
-        coordinator.async_set_updated_data.assert_called_once()
-        call_data = coordinator.async_set_updated_data.call_args[0][0]
-        assert call_data["last_event"] == event
-        assert call_data["equipment"] == MOCK_EQUIPMENT_DATA
+        coordinator.hass.async_create_task.assert_called_once()
 
     def test_websocket_callback_no_existing_data(self, coordinator):
         coordinator.data = None
+        coordinator.hass.async_create_task = MagicMock()
         event = {"Event": "CAMERA-CONNECTED", "Response": {}}
 
         coordinator._on_websocket_event(event)
 
-        coordinator.async_set_updated_data.assert_called_once()
-        call_data = coordinator.async_set_updated_data.call_args[0][0]
-        assert call_data == {"last_event": event}
+        coordinator.hass.async_create_task.assert_called_once()
 
     def test_image_save_event_bumps_index(self, coordinator):
         coordinator.latest_image_index = None
