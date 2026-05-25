@@ -175,13 +175,16 @@ The sidebar entry uses the **config entry title**, which defaults to the active 
 
 ### Cards in each view
 
-- **Equipment** (vertical entities list — camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor — clean labels with `Connected` / `Disconnected` state on the right, no truncation)
-- Latest camera image
-- **Mount RA/DEC + tracking** + a single-row Park/Unpark control (parked-state tile + Park button + Unpark button on the same line)
-- Guider RMS history graph
-- Focuser position + autofocus button
-- Sequence progress + start/stop
-- Weather + safety binary sensors
+Each instance dashboard is rendered as a vertical stack of section headings, each followed by a 2- or 3-column grid of native HA `tile` cards with adapted MDI icons and color coding:
+
+- **Equipment** — connection state of every NINA device (camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor) as a single `entities` list, no truncation
+- **Camera** — latest image (`picture-entity`) + Sensor temp / Cooler power / Cooler / Exposing tiles
+- **Mount** — RA, Dec, Altitude, Azimuth, Meridian flip, Tracking, Slewing tiles + a Park/Unpark row (Parked state + Park button + Unpark button on a single horizontal line)
+- **Guiding** — RA error / Dec error tiles + a 2-hour history graph
+- **Focuser** — Position / Temperature tiles
+- **Sequence** — Running / Target tiles + Start / Stop action tiles
+- **Weather** — Temp, Humidity, Pressure, Dew point, Wind, SQM, Sky temp tiles (3-column grid)
+- **Safety** — Safe-to-image tile
 
 ### Optional: Mushroom chips
 

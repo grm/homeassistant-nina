@@ -192,9 +192,7 @@ def _build_view(
         ("weather_connected", "Weather"),
         ("safety_monitor_connected", "Safety monitor"),
     ]
-    connect_rows = [
-        {"entity": ents[key], "name": label} for key, label in connect_keys if key in ents
-    ]
+    connect_rows = [{"entity": ents[key], "name": label} for key, label in connect_keys if key in ents]
     if connect_rows:
         cards.append(
             {
@@ -221,21 +219,13 @@ def _build_view(
 
     cam_tiles: list[dict[str, Any]] = []
     if "camera_temperature" in ents:
-        cam_tiles.append(
-            _tile(ents["camera_temperature"], "Sensor", icon="mdi:thermometer", color="cyan")
-        )
+        cam_tiles.append(_tile(ents["camera_temperature"], "Sensor", icon="mdi:thermometer", color="cyan"))
     if "camera_cooler_power" in ents:
-        cam_tiles.append(
-            _tile(ents["camera_cooler_power"], "Cooler power", icon="mdi:snowflake", color="light-blue")
-        )
+        cam_tiles.append(_tile(ents["camera_cooler_power"], "Cooler power", icon="mdi:snowflake", color="light-blue"))
     if "camera_cooler_on" in ents:
-        cam_tiles.append(
-            _tile(ents["camera_cooler_on"], "Cooler", icon="mdi:snowflake-thermometer", color="blue")
-        )
+        cam_tiles.append(_tile(ents["camera_cooler_on"], "Cooler", icon="mdi:snowflake-thermometer", color="blue"))
     if "camera_exposing" in ents:
-        cam_tiles.append(
-            _tile(ents["camera_exposing"], "Exposing", icon="mdi:camera-iris", color="amber")
-        )
+        cam_tiles.append(_tile(ents["camera_exposing"], "Exposing", icon="mdi:camera-iris", color="amber"))
     if cam_tiles:
         cards.append(_tile_grid(cam_tiles, columns=2))
 
@@ -305,58 +295,81 @@ def _build_view(
         cards.append({"type": "heading", "heading": "Guiding", "heading_style": "title"})
         guide_tiles: list[dict[str, Any]] = []
         if "guider_ra_distance" in ents:
-            guide_tiles.append(
-                _tile(ents["guider_ra_distance"], "RA error", icon="mdi:arrow-left-right", color="blue")
-            )
+            guide_tiles.append(_tile(ents["guider_ra_distance"], "RA error", icon="mdi:arrow-left-right", color="blue"))
         if "guider_dec_distance" in ents:
-            guide_tiles.append(
-                _tile(ents["guider_dec_distance"], "Dec error", icon="mdi:arrow-up-down", color="amber")
-            )
+            guide_tiles.append(_tile(ents["guider_dec_distance"], "Dec error", icon="mdi:arrow-up-down", color="amber"))
         if guide_tiles:
             cards.append(_tile_grid(guide_tiles, columns=2))
         cards.append(_history_card("Guiding error (arcsec)", guide_entities, hours=2))
 
     # ---- Focuser --------------------------------------------------------- #
-    focus_status = []
-    for key in ("focuser_position", "focuser_temperature"):
-        if key in ents:
-            focus_status.append({"entity": ents[key]})
-    if focus_status:
-        cards.append(_entities_card("Focuser", focus_status))
+    if any(k in ents for k in ("focuser_position", "focuser_temperature")):
+        cards.append({"type": "heading", "heading": "Focuser", "heading_style": "title"})
+        focus_tiles: list[dict[str, Any]] = []
+        if "focuser_position" in ents:
+            focus_tiles.append(_tile(ents["focuser_position"], "Position", icon="mdi:focus-field", color="purple"))
+        if "focuser_temperature" in ents:
+            focus_tiles.append(_tile(ents["focuser_temperature"], "Temperature", icon="mdi:thermometer", color="cyan"))
+        if focus_tiles:
+            cards.append(_tile_grid(focus_tiles, columns=2))
 
     # ---- Sequence -------------------------------------------------------- #
-    seq_status: list[dict[str, Any]] = []
-    if "sequence_running" in ents:
-        seq_status.append({"entity": ents["sequence_running"]})
-    if "sequence_target" in ents:
-        seq_status.append({"entity": ents["sequence_target"]})
-    seq_actions = []
-    for key, name in [
-        ("sequence_start", "Start sequence"),
-        ("sequence_stop", "Stop sequence"),
-    ]:
-        if key in ents:
-            seq_actions.append({"entity": ents[key], "name": name})
-    if seq_status or seq_actions:
-        cards.append(_entities_card("Sequence", seq_status + seq_actions))
+    if any(k in ents for k in ("sequence_running", "sequence_target", "sequence_start", "sequence_stop")):
+        cards.append({"type": "heading", "heading": "Sequence", "heading_style": "title"})
+        seq_status_tiles: list[dict[str, Any]] = []
+        if "sequence_running" in ents:
+            seq_status_tiles.append(_tile(ents["sequence_running"], "Running", icon="mdi:play-circle", color="green"))
+        if "sequence_target" in ents:
+            seq_status_tiles.append(_tile(ents["sequence_target"], "Target", icon="mdi:bullseye-arrow", color="indigo"))
+        if seq_status_tiles:
+            cards.append(_tile_grid(seq_status_tiles, columns=2))
+
+        seq_action_tiles: list[dict[str, Any]] = []
+        if "sequence_start" in ents:
+            seq_action_tiles.append(
+                _tile(
+                    ents["sequence_start"],
+                    "Start",
+                    icon="mdi:play",
+                    color="green",
+                    hide_state=True,
+                )
+            )
+        if "sequence_stop" in ents:
+            seq_action_tiles.append(
+                _tile(
+                    ents["sequence_stop"],
+                    "Stop",
+                    icon="mdi:stop",
+                    color="red",
+                    hide_state=True,
+                )
+            )
+        if seq_action_tiles:
+            cards.append(_tile_grid(seq_action_tiles, columns=2))
 
     # ---- Weather --------------------------------------------------------- #
-    weather_keys = (
-        "weather_temperature",
-        "weather_humidity",
-        "weather_pressure",
-        "weather_dewpoint",
-        "weather_wind_speed",
-        "weather_sky_quality",
-        "weather_sky_temperature",
-    )
-    weather_entities = [ents[k] for k in weather_keys if k in ents]
-    if weather_entities:
-        cards.append(_glance_card("Weather", weather_entities))
+    weather_layout: list[tuple[str, str, str, str]] = [
+        # (key, label, icon, color)
+        ("weather_temperature", "Temp", "mdi:thermometer", "orange"),
+        ("weather_humidity", "Humidity", "mdi:water-percent", "light-blue"),
+        ("weather_pressure", "Pressure", "mdi:gauge", "blue-grey"),
+        ("weather_dewpoint", "Dew point", "mdi:water", "cyan"),
+        ("weather_wind_speed", "Wind", "mdi:weather-windy", "teal"),
+        ("weather_sky_quality", "SQM", "mdi:weather-night", "indigo"),
+        ("weather_sky_temperature", "Sky temp", "mdi:weather-cloudy", "deep-purple"),
+    ]
+    weather_tiles = [
+        _tile(ents[key], label, icon=icon, color=color) for key, label, icon, color in weather_layout if key in ents
+    ]
+    if weather_tiles:
+        cards.append({"type": "heading", "heading": "Weather", "heading_style": "title"})
+        cards.append(_tile_grid(weather_tiles, columns=3))
 
     # ---- Safety --------------------------------------------------------- #
     if "safety_is_safe" in ents:
-        cards.append(_entities_card("Safety", [{"entity": ents["safety_is_safe"]}]))
+        cards.append({"type": "heading", "heading": "Safety", "heading_style": "title"})
+        cards.append(_tile(ents["safety_is_safe"], "Safe to image", icon="mdi:shield-check", color="green"))
 
     if not cards:
         cards.append(
