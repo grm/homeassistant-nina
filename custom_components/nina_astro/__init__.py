@@ -4,9 +4,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_PORT, DOMAIN
-from .coordinator import NinaCoordinator
 from .api_client import NinaApiClient
+from .const import CONF_PORT
+from .coordinator import NinaCoordinator
 from .websocket import NinaWebSocket
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]

@@ -1,6 +1,6 @@
 """Tests for NINA API client."""
 
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -31,13 +31,15 @@ def mock_response():
 @pytest.mark.asyncio
 async def test_get_version(api_client, mock_response):
     """Test fetching NINA version."""
-    resp = mock_response({
-        "Response": {"Version": "2.2.15", "NinaVersion": "3.1"},
-        "Error": "",
-        "StatusCode": 200,
-        "Success": True,
-        "Type": "API",
-    })
+    resp = mock_response(
+        {
+            "Response": {"Version": "2.2.15", "NinaVersion": "3.1"},
+            "Error": "",
+            "StatusCode": 200,
+            "Success": True,
+            "Type": "API",
+        }
+    )
 
     mock_session = AsyncMock()
     mock_session.get = MagicMock(return_value=resp)
@@ -53,13 +55,15 @@ async def test_get_version(api_client, mock_response):
 async def test_get_equipment_info(api_client, mock_response):
     """Test fetching equipment info."""
     equipment_data = {"Camera": {"Connected": True}, "Mount": {"Connected": False}}
-    resp = mock_response({
-        "Response": equipment_data,
-        "Error": "",
-        "StatusCode": 200,
-        "Success": True,
-        "Type": "API",
-    })
+    resp = mock_response(
+        {
+            "Response": equipment_data,
+            "Error": "",
+            "StatusCode": 200,
+            "Success": True,
+            "Type": "API",
+        }
+    )
 
     mock_session = AsyncMock()
     mock_session.get = MagicMock(return_value=resp)
@@ -73,13 +77,15 @@ async def test_get_equipment_info(api_client, mock_response):
 @pytest.mark.asyncio
 async def test_api_error_response(api_client, mock_response):
     """Test that API error responses raise NinaApiError."""
-    resp = mock_response({
-        "Response": None,
-        "Error": "Camera not connected",
-        "StatusCode": 500,
-        "Success": False,
-        "Type": "API",
-    })
+    resp = mock_response(
+        {
+            "Response": None,
+            "Error": "Camera not connected",
+            "StatusCode": 500,
+            "Success": False,
+            "Type": "API",
+        }
+    )
 
     mock_session = AsyncMock()
     mock_session.get = MagicMock(return_value=resp)
@@ -95,9 +101,7 @@ async def test_http_error(api_client):
     """Test that HTTP errors are propagated."""
     response = AsyncMock()
     response.raise_for_status = MagicMock(
-        side_effect=aiohttp.ClientResponseError(
-            request_info=MagicMock(), history=(), status=404
-        )
+        side_effect=aiohttp.ClientResponseError(request_info=MagicMock(), history=(), status=404)
     )
     response.__aenter__ = AsyncMock(return_value=response)
     response.__aexit__ = AsyncMock(return_value=False)
@@ -144,9 +148,7 @@ def test_base_url_custom_port():
 async def test_session_created_on_first_use(api_client):
     """Test that session is created lazily."""
     assert api_client._session is None
-    with patch(
-        "custom_components.nina_astro.api_client.aiohttp.ClientSession"
-    ) as mock_cls:
+    with patch("custom_components.nina_astro.api_client.aiohttp.ClientSession") as mock_cls:
         fake = MagicMock()
         fake.closed = False
         mock_cls.return_value = fake

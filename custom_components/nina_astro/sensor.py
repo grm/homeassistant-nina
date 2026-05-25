@@ -10,16 +10,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import NinaCoordinator
 from .entity import NinaEntity
 
@@ -228,6 +227,4 @@ async def async_setup_entry(
 ) -> None:
     """Set up NINA sensors."""
     coordinator: NinaCoordinator = entry.runtime_data
-    async_add_entities(
-        NinaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
-    )
+    async_add_entities(NinaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS)

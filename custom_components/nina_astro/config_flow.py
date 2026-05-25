@@ -4,11 +4,10 @@ from typing import Any
 
 import aiohttp
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
-from .const import CONF_PORT, DEFAULT_PORT, DOMAIN, API_BASE_PATH
+from .const import API_BASE_PATH, CONF_PORT, DEFAULT_PORT, DOMAIN
 
 
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -16,9 +15,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -52,6 +49,8 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, host: str, port: int) -> None:
         """Test if we can connect to the NINA API."""
         url = f"http://{host}:{port}{API_BASE_PATH}/version"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                resp.raise_for_status()
+        async with (
+            aiohttp.ClientSession() as session,
+            session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp,
+        ):
+            resp.raise_for_status()

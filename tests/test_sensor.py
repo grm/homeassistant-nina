@@ -1,12 +1,11 @@
 """Tests for NINA sensor platform."""
 
-import math
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.nina_astro.sensor import NinaSensor, SENSOR_DESCRIPTIONS, _safe_float
 from custom_components.nina_astro.coordinator import NinaCoordinator
+from custom_components.nina_astro.sensor import SENSOR_DESCRIPTIONS, NinaSensor, _safe_float
 
 from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED
 
@@ -14,6 +13,7 @@ from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED
 @pytest.fixture
 def mock_coordinator():
     import copy
+
     coord = MagicMock(spec=NinaCoordinator)
     coord.config_entry = MagicMock()
     coord.config_entry.entry_id = "test_entry_123"

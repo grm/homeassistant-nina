@@ -8,11 +8,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import NinaCoordinator
 from .entity import NinaEntity
 
@@ -156,7 +155,4 @@ async def async_setup_entry(
 ) -> None:
     """Set up NINA binary sensors."""
     coordinator: NinaCoordinator = entry.runtime_data
-    async_add_entities(
-        NinaBinarySensor(coordinator, description)
-        for description in BINARY_SENSOR_DESCRIPTIONS
-    )
+    async_add_entities(NinaBinarySensor(coordinator, description) for description in BINARY_SENSOR_DESCRIPTIONS)

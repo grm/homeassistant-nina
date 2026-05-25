@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from custom_components.nina_astro.coordinator import NinaCoordinator, _parse_sequence_state
 from custom_components.nina_astro.const import DOMAIN
+from custom_components.nina_astro.coordinator import NinaCoordinator, _parse_sequence_state
 
-from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_RAW, MOCK_SEQUENCE_PARSED
+from .conftest import MOCK_EQUIPMENT_DATA, MOCK_SEQUENCE_PARSED, MOCK_SEQUENCE_RAW
 
 
 @pytest.fixture
@@ -100,18 +99,14 @@ class TestCoordinatorUpdate:
 
     @pytest.mark.asyncio
     async def test_async_update_data_api_error(self, coordinator):
-        coordinator.api_client.get_equipment_info = AsyncMock(
-            side_effect=Exception("Connection refused")
-        )
+        coordinator.api_client.get_equipment_info = AsyncMock(side_effect=Exception("Connection refused"))
 
         with pytest.raises(UpdateFailed, match="Error communicating with NINA"):
             await coordinator._async_update_data()
 
     @pytest.mark.asyncio
     async def test_async_update_data_sequence_error(self, coordinator):
-        coordinator.api_client.get_sequence_state = AsyncMock(
-            side_effect=Exception("Timeout")
-        )
+        coordinator.api_client.get_sequence_state = AsyncMock(side_effect=Exception("Timeout"))
 
         with pytest.raises(UpdateFailed):
             await coordinator._async_update_data()

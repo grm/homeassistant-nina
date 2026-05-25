@@ -1,13 +1,13 @@
 """WebSocket client for NINA real-time events."""
 
 import asyncio
+import contextlib
 import json
 import logging
 from collections.abc import Callable
 from typing import Any
 
 import aiohttp
-
 from homeassistant.core import HomeAssistant
 
 from .const import WS_PATH
@@ -35,9 +35,7 @@ class NinaWebSocket:
     async def async_connect(self) -> None:
         """Connect to the NINA WebSocket."""
         self._running = True
-        self._task = self.hass.async_create_background_task(
-            self._listen(), "nina_websocket"
-        )
+        self._task = self.hass.async_create_background_task(self._listen(), "nina_websocket")
         _LOGGER.debug("WebSocket connection task started for %s", self.url)
 
     async def _listen(self) -> None:
@@ -91,10 +89,8 @@ class NinaWebSocket:
         self._running = False
         if self._task:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
         if self._ws and not self._ws.closed:
             await self._ws.close()
         if self._session and not self._session.closed:

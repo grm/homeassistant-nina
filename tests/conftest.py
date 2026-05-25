@@ -4,9 +4,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.nina_astro.const import DOMAIN
-
-
 MOCK_EQUIPMENT_DATA = {
     "Camera": {
         "Connected": True,
