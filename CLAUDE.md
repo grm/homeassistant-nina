@@ -78,6 +78,10 @@ python -m script.hassfest validate --integration-path custom_components/nina_ast
 - Use `voluptuous` for config schema validation
 - When adding/modifying any user-facing string (entity name, config flow text, error message), update `strings.json` (source/fallback) AND every file in `translations/`. List the directory to discover all available languages. All files must stay in sync.
 
+## Documentation
+
+- `README.md` must be kept up to date. When adding/removing entities, changing configuration, or modifying features, update the corresponding sections in the README (entities tables, features list, troubleshooting, etc.)
+
 ## Git Workflow
 
 - Branch from `main`
