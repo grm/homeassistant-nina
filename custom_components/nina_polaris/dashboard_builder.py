@@ -240,15 +240,24 @@ def _build_view(
         cards.append(_tile_grid(cam_tiles, columns=2))
 
     # ---- Mount ----------------------------------------------------------- #
-    mount_status = []
-    for key in ("mount_ra", "mount_dec", "mount_altitude", "mount_azimuth", "mount_time_to_flip"):
+    cards.append({"type": "heading", "heading": "Mount", "heading_style": "title"})
+
+    mount_tiles: list[dict[str, Any]] = []
+    mount_layout: list[tuple[str, str, str, str | None]] = [
+        # (entity_key, label, icon, color)
+        ("mount_ra", "RA", "mdi:axis-x-rotate-clockwise", "indigo"),
+        ("mount_dec", "Dec", "mdi:axis-y-rotate-clockwise", "indigo"),
+        ("mount_altitude", "Altitude", "mdi:angle-acute", "blue-grey"),
+        ("mount_azimuth", "Azimuth", "mdi:compass", "blue-grey"),
+        ("mount_time_to_flip", "Meridian flip", "mdi:timer-sand", "amber"),
+        ("mount_tracking", "Tracking", "mdi:target", "green"),
+        ("mount_slewing", "Slewing", "mdi:rotate-orbit", "orange"),
+    ]
+    for key, label, icon, color in mount_layout:
         if key in ents:
-            mount_status.append({"entity": ents[key]})
-    for key in ("mount_tracking", "mount_slewing"):
-        if key in ents:
-            mount_status.append({"entity": ents[key]})
-    if mount_status:
-        cards.append(_entities_card("Mount", mount_status))
+            mount_tiles.append(_tile(ents[key], label, icon=icon, color=color))
+    if mount_tiles:
+        cards.append(_tile_grid(mount_tiles, columns=2))
 
     # Park / Unpark on a single horizontal line: parked state on the left,
     # Park button in the middle, Unpark button on the right.
@@ -260,6 +269,7 @@ def _build_view(
                     "type": "tile",
                     "entity": ents["mount_at_park"],
                     "name": "Parked",
+                    "icon": "mdi:parking",
                     "color": "amber",
                     "vertical": False,
                 }
@@ -267,21 +277,23 @@ def _build_view(
         if "mount_park" in ents:
             row.append(
                 {
-                    "type": "button",
+                    "type": "tile",
                     "entity": ents["mount_park"],
                     "name": "Park",
-                    "show_state": False,
-                    "icon": "mdi:parking",
+                    "icon": "mdi:car-brake-parking",
+                    "color": "red",
+                    "hide_state": True,
                 }
             )
         if "mount_unpark" in ents:
             row.append(
                 {
-                    "type": "button",
+                    "type": "tile",
                     "entity": ents["mount_unpark"],
                     "name": "Unpark",
-                    "show_state": False,
                     "icon": "mdi:telescope",
+                    "color": "green",
+                    "hide_state": True,
                 }
             )
         cards.append({"type": "horizontal-stack", "cards": row})
@@ -290,17 +302,19 @@ def _build_view(
     guide_keys = ("guider_ra_distance", "guider_dec_distance")
     guide_entities = [ents[k] for k in guide_keys if k in ents]
     if guide_entities:
-        cards.append(_history_card("Guiding error (arcsec)", guide_entities, hours=2))
+        cards.append({"type": "heading", "heading": "Guiding", "heading_style": "title"})
+        guide_tiles: list[dict[str, Any]] = []
         if "guider_ra_distance" in ents:
-            cards.append(
-                _gauge_card(
-                    ents["guider_ra_distance"],
-                    "RA error",
-                    min=-3,
-                    max=3,
-                    severity={"green": 0, "yellow": 1, "red": 2},
-                )
+            guide_tiles.append(
+                _tile(ents["guider_ra_distance"], "RA error", icon="mdi:arrow-left-right", color="blue")
             )
+        if "guider_dec_distance" in ents:
+            guide_tiles.append(
+                _tile(ents["guider_dec_distance"], "Dec error", icon="mdi:arrow-up-down", color="amber")
+            )
+        if guide_tiles:
+            cards.append(_tile_grid(guide_tiles, columns=2))
+        cards.append(_history_card("Guiding error (arcsec)", guide_entities, hours=2))
 
     # ---- Focuser --------------------------------------------------------- #
     focus_status = []
