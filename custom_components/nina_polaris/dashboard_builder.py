@@ -394,38 +394,82 @@ def _build_view(
     ]
     connect_rows = [{"entity": ents[key], "name": lbl} for key, lbl in connect_keys if key in ents]
 
-    # Action buttons grouped under "Controls" — flat list, no per-device split,
-    # tiles auto-grey-out when their parent device is offline (handled in
-    # button.py via available_when_data).
-    action_specs: list[tuple[str, str]] = [
-        ("camera_connect", "Connect cam"),
-        ("camera_disconnect", "Disconnect cam"),
-        ("camera_abort_exposure", "Abort exposure"),
-        ("mount_connect", "Connect mount"),
-        ("mount_disconnect", "Disconnect mount"),
-        ("mount_park", "Park"),
-        ("mount_unpark", "Unpark"),
-        ("focuser_connect", "Connect focuser"),
-        ("focuser_disconnect", "Disconnect focuser"),
-        ("autofocus_start", "Autofocus"),
-        ("guider_connect", "Connect guider"),
-        ("guider_disconnect", "Disconnect guider"),
-        ("guider_start", "Start guiding"),
-        ("guider_stop", "Stop guiding"),
-        ("filterwheel_connect", "Connect FW"),
-        ("filterwheel_disconnect", "Disconnect FW"),
-        ("dome_connect", "Connect dome"),
-        ("dome_disconnect", "Disconnect dome"),
-        ("dome_open", "Open shutter"),
-        ("dome_close", "Close shutter"),
-        ("dome_park", "Park dome"),
-        ("plate_solve", "Plate solve"),
+    # Action buttons grouped under "Controls" — one block per device:
+    #   row 1: [Connect <device>]   [Disconnect <device>]
+    #   row 2+: other device-specific actions, two per row
+    # This keeps the connect/disconnect column alignment Grm asked for and
+    # pushes secondary controls below.
+    # (connect_key, disconnect_key, [(action_key, label), ...])
+    device_blocks: list[tuple[str, str, list[tuple[str, str]]]] = [
+        ("camera_connect", "camera_disconnect", [("camera_abort_exposure", "Abort exposure")]),
+        (
+            "mount_connect",
+            "mount_disconnect",
+            [("mount_park", "Park"), ("mount_unpark", "Unpark")],
+        ),
+        ("focuser_connect", "focuser_disconnect", [("autofocus_start", "Autofocus")]),
+        (
+            "guider_connect",
+            "guider_disconnect",
+            [("guider_start", "Start guiding"), ("guider_stop", "Stop guiding")],
+        ),
+        ("filterwheel_connect", "filterwheel_disconnect", []),
+        (
+            "dome_connect",
+            "dome_disconnect",
+            [
+                ("dome_open", "Open shutter"),
+                ("dome_close", "Close shutter"),
+                ("dome_park", "Park dome"),
+            ],
+        ),
     ]
-    action_tiles = [
-        {"type": "tile", "entity": ents[k], "vertical": False, "hide_state": True, "name": short}
-        for k, short in action_specs
-        if k in ents
-    ]
+    label_overrides = {
+        "camera_connect": "Connect cam",
+        "camera_disconnect": "Disconnect cam",
+        "mount_connect": "Connect mount",
+        "mount_disconnect": "Disconnect mount",
+        "focuser_connect": "Connect focuser",
+        "focuser_disconnect": "Disconnect focuser",
+        "guider_connect": "Connect guider",
+        "guider_disconnect": "Disconnect guider",
+        "filterwheel_connect": "Connect FW",
+        "filterwheel_disconnect": "Disconnect FW",
+        "dome_connect": "Connect dome",
+        "dome_disconnect": "Disconnect dome",
+    }
+
+    def _action_tile(key: str, label: str) -> dict[str, Any]:
+        return {
+            "type": "tile",
+            "entity": ents[key],
+            "vertical": False,
+            "hide_state": True,
+            "name": label,
+        }
+
+    control_cards: list[dict[str, Any]] = []
+    for connect_key, disconnect_key, extras in device_blocks:
+        if connect_key not in ents and disconnect_key not in ents:
+            continue
+        # Connect / Disconnect always on the same row, columns aligned.
+        pair = []
+        if connect_key in ents:
+            pair.append(_action_tile(connect_key, label_overrides.get(connect_key, "Connect")))
+        if disconnect_key in ents:
+            pair.append(_action_tile(disconnect_key, label_overrides.get(disconnect_key, "Disconnect")))
+        if pair:
+            control_cards.append(_tile_grid(pair, columns=2))
+        # Secondary actions, two per row.
+        extra_tiles = [_action_tile(k, lbl) for k, lbl in extras if k in ents]
+        if extra_tiles:
+            control_cards.append(_tile_grid(extra_tiles, columns=2))
+
+    # Sequence + plate-solve actions are not tied to a connect/disconnect pair;
+    # render them as a final two-column row.
+    misc_tiles = [_action_tile(k, lbl) for k, lbl in (("plate_solve", "Plate solve"),) if k in ents]
+    if misc_tiles:
+        control_cards.append(_tile_grid(misc_tiles, columns=2))
 
     if connect_rows:
         env_cards.insert(0, {"type": "heading", "heading": "Equipment", "heading_style": "title"})
@@ -450,9 +494,10 @@ def _build_view(
                     "entities": connect_rows,
                 },
             )
-        if action_tiles:
+        if control_cards:
             env_cards.insert(2, {"type": "heading", "heading": "Controls", "heading_style": "title"})
-            env_cards.insert(3, _tile_grid(action_tiles, columns=2))
+            for offset, card in enumerate(control_cards, start=3):
+                env_cards.insert(offset, card)
 
     # ---- Monitoring camera (optional) ----------------------------------- #
     # If the user configured an external camera entity in the options flow

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Controls section reorganized per device with aligned Connect/Disconnect columns.** The flat 22-tile grid is replaced by per-device blocks: row 1 is always `[Connect <device>] [Disconnect <device>]` (left = connect, right = disconnect, columns aligned across all devices), row 2+ holds the device's secondary actions (Park/Unpark, Autofocus, guiding start/stop, dome shutter, plate solve, etc.). Easier to scan, easier to act.
+
 ### Fixed
 
 - **`mount_time_to_flip` was reported in `min` but NINA actually returns hours.** The displayed value `11.52 min` was actually 11h30m (≈691 min). The sensor now declares `device_class: duration` with `UnitOfTime.HOURS`, so Home Assistant displays it correctly and lets users convert to minutes/seconds in the UI.
