@@ -34,6 +34,18 @@ def _equipment_connected(domain: str) -> Callable[[dict], bool]:
     return _check
 
 
+def _equipment_disconnected(domain: str) -> Callable[[dict], bool]:
+    """Available when the device exists in NINA's equipment list but is offline."""
+
+    def _check(data: dict) -> bool:
+        equipment = (data or {}).get("equipment") or {}
+        device = equipment.get(domain)
+        # Only show "connect" when NINA has reported the device at least once.
+        return device is not None and not device.get("Connected", False)
+
+    return _check
+
+
 def _sequence_running(data: dict) -> bool:
     return bool(((data or {}).get("sequence") or {}).get("running"))
 
@@ -43,6 +55,43 @@ def _sequence_idle(data: dict) -> bool:
 
 
 BUTTONS: tuple[NinaButtonDescription, ...] = (
+    # --- Camera --- #
+    NinaButtonDescription(
+        key="camera_connect",
+        translation_key="camera_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("camera"),
+        available_when=_equipment_disconnected("Camera"),
+    ),
+    NinaButtonDescription(
+        key="camera_disconnect",
+        translation_key="camera_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("camera"),
+        available_when=_equipment_connected("Camera"),
+    ),
+    NinaButtonDescription(
+        key="camera_abort_exposure",
+        translation_key="camera_abort_exposure",
+        icon="mdi:camera-off-outline",
+        action=lambda api: api.camera_abort_exposure(),
+        available_when=_equipment_connected("Camera"),
+    ),
+    # --- Mount --- #
+    NinaButtonDescription(
+        key="mount_connect",
+        translation_key="mount_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("mount"),
+        available_when=_equipment_disconnected("Mount"),
+    ),
+    NinaButtonDescription(
+        key="mount_disconnect",
+        translation_key="mount_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("mount"),
+        available_when=_equipment_connected("Mount"),
+    ),
     NinaButtonDescription(
         key="mount_park",
         translation_key="mount_park",
@@ -57,6 +106,109 @@ BUTTONS: tuple[NinaButtonDescription, ...] = (
         action=lambda api: api.mount_unpark(),
         available_when=_equipment_connected("Mount"),
     ),
+    # --- Focuser --- #
+    NinaButtonDescription(
+        key="focuser_connect",
+        translation_key="focuser_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("focuser"),
+        available_when=_equipment_disconnected("Focuser"),
+    ),
+    NinaButtonDescription(
+        key="focuser_disconnect",
+        translation_key="focuser_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("focuser"),
+        available_when=_equipment_connected("Focuser"),
+    ),
+    NinaButtonDescription(
+        key="autofocus_start",
+        translation_key="autofocus_start",
+        icon="mdi:image-filter-center-focus",
+        action=lambda api: api.autofocus_start(),
+        available_when=_equipment_connected("Focuser"),
+    ),
+    # --- Guider --- #
+    NinaButtonDescription(
+        key="guider_connect",
+        translation_key="guider_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("guider"),
+        available_when=_equipment_disconnected("Guider"),
+    ),
+    NinaButtonDescription(
+        key="guider_disconnect",
+        translation_key="guider_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("guider"),
+        available_when=_equipment_connected("Guider"),
+    ),
+    NinaButtonDescription(
+        key="guider_start",
+        translation_key="guider_start",
+        icon="mdi:crosshairs",
+        action=lambda api: api.guider_start(),
+        available_when=_equipment_connected("Guider"),
+    ),
+    NinaButtonDescription(
+        key="guider_stop",
+        translation_key="guider_stop",
+        icon="mdi:crosshairs-off",
+        action=lambda api: api.guider_stop(),
+        available_when=_equipment_connected("Guider"),
+    ),
+    # --- Filter wheel --- #
+    NinaButtonDescription(
+        key="filterwheel_connect",
+        translation_key="filterwheel_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("filterwheel"),
+        available_when=_equipment_disconnected("FilterWheel"),
+    ),
+    NinaButtonDescription(
+        key="filterwheel_disconnect",
+        translation_key="filterwheel_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("filterwheel"),
+        available_when=_equipment_connected("FilterWheel"),
+    ),
+    # --- Dome --- #
+    NinaButtonDescription(
+        key="dome_connect",
+        translation_key="dome_connect",
+        icon="mdi:lan-connect",
+        action=lambda api: api.device_connect("dome"),
+        available_when=_equipment_disconnected("Dome"),
+    ),
+    NinaButtonDescription(
+        key="dome_disconnect",
+        translation_key="dome_disconnect",
+        icon="mdi:lan-disconnect",
+        action=lambda api: api.device_disconnect("dome"),
+        available_when=_equipment_connected("Dome"),
+    ),
+    NinaButtonDescription(
+        key="dome_open",
+        translation_key="dome_open",
+        icon="mdi:home-roof",
+        action=lambda api: api.dome_open(),
+        available_when=_equipment_connected("Dome"),
+    ),
+    NinaButtonDescription(
+        key="dome_close",
+        translation_key="dome_close",
+        icon="mdi:home-import-outline",
+        action=lambda api: api.dome_close(),
+        available_when=_equipment_connected("Dome"),
+    ),
+    NinaButtonDescription(
+        key="dome_park",
+        translation_key="dome_park",
+        icon="mdi:parking",
+        action=lambda api: api.dome_park(),
+        available_when=_equipment_connected("Dome"),
+    ),
+    # --- Sequence (existing) --- #
     NinaButtonDescription(
         key="sequence_start",
         translation_key="sequence_start",
@@ -70,13 +222,6 @@ BUTTONS: tuple[NinaButtonDescription, ...] = (
         icon="mdi:stop-circle",
         action=lambda api: api.sequence_stop(),
         available_when=_sequence_running,
-    ),
-    NinaButtonDescription(
-        key="autofocus_start",
-        translation_key="autofocus_start",
-        icon="mdi:image-filter-center-focus",
-        action=lambda api: api.autofocus_start(),
-        available_when=_equipment_connected("Focuser"),
     ),
     NinaButtonDescription(
         key="plate_solve",

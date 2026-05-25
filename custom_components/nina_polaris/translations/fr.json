@@ -164,24 +164,30 @@
       }
     },
     "button": {
-      "mount_park": {
-        "name": "Parquer la monture"
-      },
-      "mount_unpark": {
-        "name": "Déparquer la monture"
-      },
-      "sequence_start": {
-        "name": "Lancer la séquence"
-      },
-      "sequence_stop": {
-        "name": "Arrêter la séquence"
-      },
-      "autofocus_start": {
-        "name": "Lancer l'autofocus"
-      },
-      "plate_solve": {
-        "name": "Plate solve"
-      }
+      "camera_connect": { "name": "Connecter la caméra" },
+      "camera_disconnect": { "name": "Déconnecter la caméra" },
+      "camera_abort_exposure": { "name": "Annuler la pose" },
+      "mount_connect": { "name": "Connecter la monture" },
+      "mount_disconnect": { "name": "Déconnecter la monture" },
+      "mount_park": { "name": "Parquer la monture" },
+      "mount_unpark": { "name": "Déparquer la monture" },
+      "focuser_connect": { "name": "Connecter le focuser" },
+      "focuser_disconnect": { "name": "Déconnecter le focuser" },
+      "autofocus_start": { "name": "Lancer l'autofocus" },
+      "guider_connect": { "name": "Connecter le guideur" },
+      "guider_disconnect": { "name": "Déconnecter le guideur" },
+      "guider_start": { "name": "Démarrer le guidage" },
+      "guider_stop": { "name": "Arrêter le guidage" },
+      "filterwheel_connect": { "name": "Connecter la roue à filtres" },
+      "filterwheel_disconnect": { "name": "Déconnecter la roue à filtres" },
+      "dome_connect": { "name": "Connecter le dôme" },
+      "dome_disconnect": { "name": "Déconnecter le dôme" },
+      "dome_open": { "name": "Ouvrir le toit/abri" },
+      "dome_close": { "name": "Fermer le toit/abri" },
+      "dome_park": { "name": "Parquer le dôme" },
+      "sequence_start": { "name": "Lancer la séquence" },
+      "sequence_stop": { "name": "Arrêter la séquence" },
+      "plate_solve": { "name": "Plate solve" }
     },
     "switch": {
       "camera_cooler": {

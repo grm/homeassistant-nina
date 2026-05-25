@@ -164,24 +164,30 @@
       }
     },
     "button": {
-      "mount_park": {
-        "name": "Park mount"
-      },
-      "mount_unpark": {
-        "name": "Unpark mount"
-      },
-      "sequence_start": {
-        "name": "Start sequence"
-      },
-      "sequence_stop": {
-        "name": "Stop sequence"
-      },
-      "autofocus_start": {
-        "name": "Run autofocus"
-      },
-      "plate_solve": {
-        "name": "Plate solve"
-      }
+      "camera_connect": { "name": "Connect camera" },
+      "camera_disconnect": { "name": "Disconnect camera" },
+      "camera_abort_exposure": { "name": "Abort exposure" },
+      "mount_connect": { "name": "Connect mount" },
+      "mount_disconnect": { "name": "Disconnect mount" },
+      "mount_park": { "name": "Park mount" },
+      "mount_unpark": { "name": "Unpark mount" },
+      "focuser_connect": { "name": "Connect focuser" },
+      "focuser_disconnect": { "name": "Disconnect focuser" },
+      "autofocus_start": { "name": "Run autofocus" },
+      "guider_connect": { "name": "Connect guider" },
+      "guider_disconnect": { "name": "Disconnect guider" },
+      "guider_start": { "name": "Start guiding" },
+      "guider_stop": { "name": "Stop guiding" },
+      "filterwheel_connect": { "name": "Connect filter wheel" },
+      "filterwheel_disconnect": { "name": "Disconnect filter wheel" },
+      "dome_connect": { "name": "Connect dome" },
+      "dome_disconnect": { "name": "Disconnect dome" },
+      "dome_open": { "name": "Open dome shutter" },
+      "dome_close": { "name": "Close dome shutter" },
+      "dome_park": { "name": "Park dome" },
+      "sequence_start": { "name": "Start sequence" },
+      "sequence_stop": { "name": "Stop sequence" },
+      "plate_solve": { "name": "Plate solve" }
     },
     "switch": {
       "camera_cooler": {
