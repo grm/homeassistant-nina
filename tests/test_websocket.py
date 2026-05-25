@@ -13,7 +13,13 @@ from custom_components.nina_astro.websocket import NinaWebSocket
 @pytest.fixture
 def mock_hass():
     hass = MagicMock()
-    hass.async_create_background_task = MagicMock(return_value=AsyncMock())
+
+    def _create_bg_task(coro, name=None):
+        # Close the coroutine so it is not flagged as "never awaited"
+        coro.close()
+        return AsyncMock()
+
+    hass.async_create_background_task = MagicMock(side_effect=_create_bg_task)
     return hass
 
 

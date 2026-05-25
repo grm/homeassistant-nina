@@ -144,5 +144,17 @@ def test_base_url_custom_port():
 async def test_session_created_on_first_use(api_client):
     """Test that session is created lazily."""
     assert api_client._session is None
-    session = api_client.session
-    assert session is not None
+    with patch(
+        "custom_components.nina_astro.api_client.aiohttp.ClientSession"
+    ) as mock_cls:
+        fake = MagicMock()
+        fake.closed = False
+        mock_cls.return_value = fake
+
+        session = api_client.session
+        assert session is fake
+        mock_cls.assert_called_once()
+
+        # Second access reuses the same instance
+        assert api_client.session is fake
+        mock_cls.assert_called_once()
