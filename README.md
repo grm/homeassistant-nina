@@ -175,7 +175,7 @@ The sidebar entry uses the **config entry title**, which defaults to the active 
 
 ### Cards in each view
 
-Each instance dashboard is rendered as a vertical stack of section headings, each followed by a 2- or 3-column grid of native HA `tile` cards with adapted MDI icons and color coding:
+The view uses HA's responsive `sections` layout: **3 columns on desktop, 1 column on mobile**. Sections are organized so the user-facing reading order matches a typical imaging session...[truncated]
 
 - **Equipment** — connection state of every NINA device (camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor) as a single `entities` list, no truncation
 - **Camera** — latest image (`picture-entity`) + Sensor temp / Cooler power / Cooler / Exposing tiles
