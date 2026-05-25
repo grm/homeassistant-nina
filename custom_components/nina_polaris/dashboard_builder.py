@@ -179,21 +179,47 @@ def _build_view(
     for key in ("mount_ra", "mount_dec", "mount_altitude", "mount_azimuth", "mount_time_to_flip"):
         if key in ents:
             mount_status.append({"entity": ents[key]})
-    for key in ("mount_tracking", "mount_slewing", "mount_at_park"):
+    for key in ("mount_tracking", "mount_slewing"):
         if key in ents:
             mount_status.append({"entity": ents[key]})
     if mount_status:
         cards.append(_entities_card("Mount", mount_status))
 
-    mount_actions = []
-    for key, name in [
-        ("mount_park", "Park"),
-        ("mount_unpark", "Unpark"),
-    ]:
-        if key in ents:
-            mount_actions.append({"entity": ents[key], "name": name})
-    if mount_actions:
-        cards.append(_entities_card("Mount actions", mount_actions))
+    # Park / Unpark on a single horizontal line: parked state on the left,
+    # Park button in the middle, Unpark button on the right.
+    if any(k in ents for k in ("mount_park", "mount_unpark", "mount_at_park")):
+        row: list[dict[str, Any]] = []
+        if "mount_at_park" in ents:
+            row.append(
+                {
+                    "type": "tile",
+                    "entity": ents["mount_at_park"],
+                    "name": "Parked",
+                    "color": "amber",
+                    "vertical": False,
+                }
+            )
+        if "mount_park" in ents:
+            row.append(
+                {
+                    "type": "button",
+                    "entity": ents["mount_park"],
+                    "name": "Park",
+                    "show_state": False,
+                    "icon": "mdi:parking",
+                }
+            )
+        if "mount_unpark" in ents:
+            row.append(
+                {
+                    "type": "button",
+                    "entity": ents["mount_unpark"],
+                    "name": "Unpark",
+                    "show_state": False,
+                    "icon": "mdi:telescope",
+                }
+            )
+        cards.append({"type": "horizontal-stack", "cards": row})
 
     # ---- Guiding --------------------------------------------------------- #
     guide_keys = ("guider_ra_distance", "guider_dec_distance")

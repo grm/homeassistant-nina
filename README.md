@@ -177,7 +177,7 @@ The sidebar entry uses the **config entry title**, which defaults to the active 
 
 - **Equipment** (vertical entities list — camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor — clean labels with `Connected` / `Disconnected` state on the right, no truncation)
 - Latest camera image
-- Mount RA/DEC + tracking actions
+- **Mount RA/DEC + tracking** + a single-row Park/Unpark control (parked-state tile + Park button + Unpark button on the same line)
 - Guider RMS history graph
 - Focuser position + autofocus button
 - Sequence progress + start/stop
