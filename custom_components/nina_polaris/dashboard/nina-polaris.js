@@ -75,17 +75,20 @@ class NinaPolarisViewStrategy extends HTMLElement {
 // ---------------------------------------------------------------------------
 
 function collectInstances(hass, onlyEntryId) {
-  // Group our entities by device_id (available in the frontend display entry).
-  // config_entry_id is NOT present in the display-format entity registry,
-  // so we resolve it via the device registry instead.
+  // The frontend entity registry uses abbreviated keys (pl, di, ei) but
+  // the hass object re-maps them to full names (platform, device_id, entity_id).
+  // We support both to be safe.
   const byDevice = new Map();
-  for (const entity of Object.values(hass.entities || {})) {
-    if (!entity || entity.platform !== DOMAIN) continue;
-    const deviceId = entity.device_id;
+  for (const [entityId, entity] of Object.entries(hass.entities || {})) {
+    if (!entity) continue;
+    const platform = entity.platform || entity.pl;
+    if (platform !== DOMAIN) continue;
+    const deviceId = entity.device_id || entity.di;
     if (!deviceId) continue;
     if (!byDevice.has(deviceId)) byDevice.set(deviceId, []);
-    byDevice.get(deviceId).push(entity.entity_id);
+    byDevice.get(deviceId).push(entityId);
   }
+
 
   const results = [];
   for (const [deviceId, entityIds] of byDevice) {
@@ -103,23 +106,40 @@ function collectInstances(hass, onlyEntryId) {
 
 
 /**
- * Index entity_ids by their NINA "key" suffix.
- * Our unique_ids are `<entry>_<key>` and HA derives entity_ids the same way:
- *   sensor.nina_camera_temperature, binary_sensor.nina_camera_connected, ...
- * So we strip the leading `<domain>.<prefix_>` to get the key.
+ * Index entity_ids by their description key suffix.
+ * With has_entity_name=True, HA generates entity_ids as:
+ *   <domain>.<device_slug>_<description_key>
+ * e.g. sensor.trevinca_camera_temperature, binary_sensor.trevinca_mount_connected
+ * We detect the common device prefix and strip it to recover the bare key.
  */
 function indexByKey(entityIds) {
+  const prefix = detectDevicePrefix(entityIds);
   const map = {};
   for (const eid of entityIds) {
     const [domain, object] = eid.split(".");
-    // Strip the "nina[_2]_" instance prefix so we land on the bare key.
-    // Examples : nina_camera_temperature, nina_2_camera_temperature
-    const stripped = object.replace(/^nina(?:_\d+)?_/, "");
+    const stripped = prefix ? object.slice(prefix.length) : object;
     map[`${domain}.${stripped}`] = eid;
-    // Also index without the platform domain so callers can ask either way.
     if (!(stripped in map)) map[stripped] = eid;
   }
   return map;
+}
+
+function detectDevicePrefix(entityIds) {
+  // Find the common prefix shared by all object_ids (the device slug + "_").
+  const objects = entityIds.map((eid) => eid.split(".")[1]);
+  if (objects.length === 0) return "";
+  let prefix = objects[0];
+  for (let i = 1; i < objects.length; i++) {
+    while (objects[i].indexOf(prefix) !== 0) {
+      prefix = prefix.slice(0, prefix.lastIndexOf("_") + 1);
+      if (!prefix) return "";
+    }
+  }
+  // Ensure prefix ends with "_" (it's a device slug separator).
+  if (prefix && !prefix.endsWith("_")) {
+    prefix = prefix.slice(0, prefix.lastIndexOf("_") + 1);
+  }
+  return prefix;
 }
 
 function eid(inst, key) {
@@ -342,14 +362,10 @@ function buildWeatherCard(inst, opts) {
 
 // ---------------------------------------------------------------------------
 
-customElements.define(
-  "ll-strategy-dashboard-nina-polaris",
-  NinaPolarisDashboardStrategy,
-);
-customElements.define(
-  "ll-strategy-view-nina-polaris",
-  NinaPolarisViewStrategy,
-);
+function safeDefine(name, cls) {
+  if (!customElements.get(name)) customElements.define(name, cls);
+}
 
-// Older HA frontends look for these names too.
-customElements.define("ll-strategy-nina-polaris", NinaPolarisViewStrategy);
+safeDefine("ll-strategy-dashboard-nina-polaris", NinaPolarisDashboardStrategy);
+safeDefine("ll-strategy-view-nina-polaris", NinaPolarisViewStrategy);
+safeDefine("ll-strategy-nina-polaris", NinaPolarisViewStrategy);
