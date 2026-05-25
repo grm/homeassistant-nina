@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Per-device equipment buttons**: connect, disconnect, plus device-specific
+  actions (camera abort exposure, mount park/unpark, focuser autofocus,
+  guider start/stop, dome open/close/park, filter wheel connect/disconnect).
+  Each button auto-disables itself when the parent device is offline.
+- **Inline equipment actions on the dashboard**: every device now renders as a
+  status row plus a 2-column tile grid of available actions, so you can
+  reconnect a focuser, open the dome shutter, or park the mount without
+  leaving the NINA Polaris view.
+
 ### Fixed
 
 - **Sensors and binary sensors now report `unknown` when their parent NINA device is disconnected** instead of echoing stale defaults like `0`, `-1`, or `False` cached from the last connected session. NINA's `/equipment/*/info` endpoints keep returning placeholder numerics even with `Connected: false`, which made the dashboard look "live" when the rig was actually offline (camera temp showing `-10 °C` while the sensor was unplugged, focuser at position `0`, etc.). Affected sensors: camera temp / cooler power, mount RA/Dec/Alt/Az/time-to-flip/tracking/slewing/parked, guider RA-Dec distance, focuser position/temperature, camera exposing/cooler-on. Weather, Safety and `latest_image_*` sensors are unaffected (they're either independent or expose historical data).

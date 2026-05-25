@@ -8,10 +8,20 @@ from custom_components.nina_polaris.dashboard_builder import build_dashboard_con
 
 
 def _all_cards(view):
-    """Flatten cards across the multi-column 'sections' view."""
+    """Flatten cards across the multi-column 'sections' view, recursing into
+    vertical-stack / horizontal-stack / grid containers."""
+
+    def _walk(node, out):
+        if isinstance(node, dict):
+            out.append(node)
+            for child in node.get("cards", []) or []:
+                _walk(child, out)
+        return out
+
     out = []
     for section in view.get("sections", []):
-        out.extend(section.get("cards", []))
+        for card in section.get("cards", []):
+            _walk(card, out)
     return out
 
 
@@ -39,20 +49,38 @@ async def test_build_dashboard_config_includes_camera(hass):
 
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_equipment_uses_entities_card(hass):
-    """The Equipment card is a vertical entities list with friendly names."""
+    """Each equipment device is rendered as its own status row."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    eq_cards = [
+    # Per-device rows are entities cards with a single row whose name is the
+    # device label (Camera / Mount / Guider / …).
+    device_rows = [
         c
         for c in cards
         if c.get("type") == "entities"
-        and any(row.get("name") in {"Camera", "Mount", "Guider"} for row in c.get("entities", []))
+        and len(c.get("entities", [])) == 1
+        and c["entities"][0].get("name") in {"Camera", "Mount", "Guider", "Focuser"}
     ]
-    assert len(eq_cards) == 1, "expected exactly one Equipment entities card"
-    rows = eq_cards[0]["entities"]
-    assert all(isinstance(row, dict) and "name" in row and "entity" in row for row in rows)
-    names = {row["name"] for row in rows}
-    assert "Camera" in names or "Mount" in names
+    assert device_rows, "expected per-device equipment status rows"
+    names = {c["entities"][0]["name"] for c in device_rows}
+    assert {"Camera", "Mount"}.issubset(names)
+
+
+@pytest.mark.usefixtures("mock_config_entry")
+async def test_build_dashboard_config_equipment_inline_actions(hass):
+    """Connected devices expose action tiles inline below their status row."""
+    config = build_dashboard_config(hass)
+    cards = _all_cards(config["views"][0])
+    # Action tiles point at button.* entities.
+    action_tile_entities = {
+        c.get("entity")
+        for c in cards
+        if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")
+    }
+    # At minimum, we expect connect/disconnect tiles and a park action somewhere.
+    joined = " ".join(action_tile_entities)
+    assert "park" in joined, f"expected a park action tile, got {action_tile_entities}"
+    assert "connect" in joined, f"expected a connect/disconnect action tile, got {action_tile_entities}"
 
 
 @pytest.mark.usefixtures("mock_config_entry")
