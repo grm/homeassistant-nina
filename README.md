@@ -227,13 +227,13 @@ The dashboard is **regenerated on every page load** from your current entity reg
 
 ### Sidebar naming
 
-The sidebar entry is always **NINA**. Telescope names live in the menu (or as the view title when you only have one instance). To rename a telescope, rename the hub in *Settings → Devices & Services → ⋮ → Rename* on that NINA Polaris integration card.
+The sidebar entry is always **NINA**. Each telescope keeps the name of its NINA profile (the config entry title, e.g. *RC14*, *TEC140*): that name is the device name and the menu row, so two hubs are not both called NINA. To rename one, rename the hub in *Settings → Devices & Services → ⋮ → Rename* on that integration card.
 
 ### Cards in each view
 
 Each telescope view is a stack of full-width bands, so the tiles use the width of the screen instead of sitting in one narrow column:
 
-- **Latest image** — the current frame, across the top. A configured monitoring camera sits beside it
+- **Latest image** — the current frame, centered on a wide screen. A configured monitoring camera sits beside it
 - **Last image** — HFR, stars, filter, exposure, guiding RMS and the other frame stats (refreshed on `IMAGE-SAVE`), six per row
 - **Shooting** — sequence, target and whether an exposure is running
 - **Sensor, Mount, Guiding, Focuser, Weather** — cooler and sensor temperature, pointing, a 2-hour guiding graph, focus, then weather

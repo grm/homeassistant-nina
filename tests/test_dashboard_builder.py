@@ -34,10 +34,15 @@ async def test_build_dashboard_config_has_one_view_per_instance(hass):
     view = config["views"][0]
     assert view["icon"] == "mdi:telescope"
     assert view["type"] == "sections"
-    # Bands span the view so the page is not stuck in one narrow column.
+    # Bands span the view. The image is a half-width section between two spacers
+    # so it sits in the middle; everything else stays full width.
     assert view["max_columns"] == 4
-    assert view["sections"]
-    assert all(section.get("column_span") == 4 for section in view["sections"])
+    spans = [section.get("column_span") for section in view["sections"]]
+    assert spans[0] == 1
+    assert spans[1] == 2
+    assert spans[2] == 1
+    assert all(span == 4 for span in spans[3:])
+    assert view["sections"][0]["visibility"]
     assert len(view["sections"]) >= 2
     assert len(_all_cards(view)) >= 4
 
@@ -127,6 +132,29 @@ async def test_build_dashboard_config_mushroom_chips(hass):
     assert any(c.get("type") == "custom:mushroom-chips-card" for c in cards)
     entities_titles = [c.get("title") for c in cards if c.get("type") == "entities"]
     assert "Equipment" not in entities_titles
+
+
+async def test_menu_labels_use_each_entry_title(hass):
+    """Two hubs keep their profile names instead of both reading NINA."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.nina_polaris.const import CONF_PORT, DOMAIN
+
+    first = MockConfigEntry(domain=DOMAIN, title="RC14", data={"host": "192.0.2.1", CONF_PORT: 1888})
+    second = MockConfigEntry(domain=DOMAIN, title="TEC-140", data={"host": "192.0.2.2", CONF_PORT: 1888})
+    first.add_to_hass(hass)
+    second.add_to_hass(hass)
+    config = build_dashboard_config(hass, entry_ids=[first.entry_id, second.entry_id])
+    buttons = [c for c in _all_cards(config["views"][0]) if c.get("type") == "button"]
+    assert [b["name"] for b in buttons] == ["RC14", "TEC-140"]
+
+
+async def test_device_is_named_after_the_profile(hass, mock_config_entry):
+    from homeassistant.helpers import device_registry as dr
+
+    device = dr.async_get(hass).async_get_device(identifiers={("nina_polaris", mock_config_entry.entry_id)})
+    assert device is not None
+    assert device.name == "NINA Polaris"
 
 
 async def test_build_dashboard_config_stacks_instances_in_a_menu(hass):

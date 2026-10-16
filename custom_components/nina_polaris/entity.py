@@ -15,9 +15,12 @@ class NinaEntity(CoordinatorEntity[NinaCoordinator]):
     def __init__(self, coordinator: NinaCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        # The profile name (config entry title) distinguishes two hubs.
+        # A hardcoded "NINA" made every instance look identical.
+        title = coordinator.config_entry.title or "NINA"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name="NINA",
+            name=title,
             manufacturer="NINA",
             model="Astrophotography Suite",
         )

@@ -51,15 +51,27 @@ def _entities_for_entry(hass: HomeAssistant, entry_id: str) -> dict[str, str]:
 
 
 def _instance_label(hass: HomeAssistant, entry_id: str) -> str:
-    """Human-friendly label for one NINA instance."""
+    """Human-friendly label for one NINA instance.
+
+    A user rename wins. Otherwise the config entry title (the NINA profile
+    name) wins over the device name, which used to be the generic "NINA"
+    for every hub.
+    """
+    entry = hass.config_entries.async_get_entry(entry_id)
+    title = entry.title if entry is not None and entry.title else None
+    name_by_user: str | None = None
+    device_name: str | None = None
     device_reg = dr.async_get(hass)
     for device in device_reg.devices.values():
         if (DOMAIN, entry_id) in device.identifiers:
-            return device.name_by_user or device.name or "NINA"
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if entry is not None and entry.title:
-        return entry.title
-    return "NINA"
+            name_by_user = device.name_by_user
+            device_name = device.name
+            break
+    if name_by_user:
+        return name_by_user
+    if title:
+        return title
+    return device_name or "NINA"
 
 
 # --------------------------------------------------------------------------- #
@@ -184,7 +196,7 @@ _TILE_COLUMNS = 2
 _ACTION_COLUMNS = 3
 
 
-def _with_grid(card: dict[str, Any], columns: int, rows: int | None = None) -> dict[str, Any]:
+def _with_grid(card: dict[str, Any], columns: int | str, rows: int | None = None) -> dict[str, Any]:
     """Attach a section-grid size so neighbouring cards share a column rhythm."""
     opts: dict[str, Any] = {"columns": columns}
     if rows is not None:
@@ -196,7 +208,7 @@ def _with_grid(card: dict[str, Any], columns: int, rows: int | None = None) -> d
 def _heading(text: str, *, style: str = "title") -> dict[str, Any]:
     return _with_grid(
         {"type": "heading", "heading": text, "heading_style": style},
-        12,
+        "full",
     )
 
 
@@ -280,6 +292,24 @@ def _band(cards: list[dict[str, Any]]) -> dict[str, Any]:
     return {"type": "grid", "column_span": _VIEW_COLUMNS, "cards": cards}
 
 
+def _image_spacer() -> dict[str, Any]:
+    """Empty side column so the image section sits in the middle on a wide screen.
+
+    Hidden below 1200px, where the view is already a single column.
+    """
+    return {
+        "type": "grid",
+        "column_span": 1,
+        "visibility": [{"condition": "screen", "media_query": "(min-width: 1200px)"}],
+        "cards": [{"type": "heading", "heading": ""}],
+    }
+
+
+def _image_band(cards: list[dict[str, Any]]) -> dict[str, Any]:
+    """Half-width section. With a spacer on each side it lands in the middle."""
+    return {"type": "grid", "column_span": 2, "cards": cards}
+
+
 def _build_view(
     hass: HomeAssistant,
     entry_id: str,
@@ -311,24 +341,7 @@ def _build_view(
     pictures: list[dict[str, Any]] = []
     monitoring_entity = _monitoring_camera_entity(hass, entry_id)
     if cam_eid and monitoring_entity:
-        pictures.append(_with_grid(_picture_entity(cam_eid, "Latest image"), 8, rows=6))
-        pictures.append(
-            _with_grid(
-                {
-                    "type": "picture-entity",
-                    "entity": monitoring_entity,
-                    "name": "Monitoring",
-                    "show_state": False,
-                    "show_name": True,
-                    "camera_view": "live",
-                },
-                4,
-                rows=6,
-            )
-        )
-    elif cam_eid:
         pictures.append(_with_grid(_picture_entity(cam_eid, "Latest image"), 12, rows=6))
-    elif monitoring_entity:
         pictures.append(
             _with_grid(
                 {
@@ -343,12 +356,32 @@ def _build_view(
                 rows=6,
             )
         )
+    elif cam_eid:
+        pictures.append(_with_grid(_picture_entity(cam_eid, "Latest image"), "full", rows=6))
+    elif monitoring_entity:
+        pictures.append(
+            _with_grid(
+                {
+                    "type": "picture-entity",
+                    "entity": monitoring_entity,
+                    "name": "Monitoring",
+                    "show_state": False,
+                    "show_name": True,
+                    "camera_view": "live",
+                },
+                "full",
+                rows=6,
+            )
+        )
     if pictures:
         # The latest image leads. A monitoring camera sits beside it and is
         # labelled on the card, so a heading does not push the image down.
         if monitoring_entity and not cam_eid:
             pictures.insert(0, _heading("Monitoring"))
-        bands.append(_band(pictures))
+        # Spacers flank the image on a wide screen so it sits in the middle.
+        bands.append(_image_spacer())
+        bands.append(_image_band(pictures))
+        bands.append(_image_spacer())
 
     last_image_tiles = _tiles_for(
         ents,

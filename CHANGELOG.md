@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Latest image sits in the middle of a wide dashboard.** The frame is a half-width block with empty space on each side. On a phone it still uses the full width.
+
+### Fixed
+
+- **Several NINA hubs were all named NINA.** The device and the dashboard menu now use the profile name from the config entry (for example RC14 and TEC-140). A name you set yourself in Home Assistant is left as-is.
+
 ## [0.8.1] - 2026-10-16
 
 ### Changed
