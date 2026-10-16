@@ -34,8 +34,10 @@ async def test_build_dashboard_config_has_one_view_per_instance(hass):
     view = config["views"][0]
     assert view["icon"] == "mdi:telescope"
     assert view["type"] == "sections"
-    # Status, then capture, then dangerous actions — stacked, one column.
-    assert view["max_columns"] == 1
+    # Bands span the view so the page is not stuck in one narrow column.
+    assert view["max_columns"] == 4
+    assert view["sections"]
+    assert all(section.get("column_span") == 4 for section in view["sections"])
     assert len(view["sections"]) >= 2
     assert len(_all_cards(view)) >= 4
 
@@ -50,18 +52,12 @@ async def test_build_dashboard_config_includes_camera(hass):
 
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_equipment_uses_entities_card(hass):
-    """The Equipment card is a single vertical entities list."""
+    """Equipment connection state is a row of tiles, after the session info."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    eq_cards = [
-        c
-        for c in cards
-        if c.get("type") == "entities"
-        and any(row.get("name") in {"Camera", "Mount", "Guider"} for row in c.get("entities", []))
-    ]
-    assert len(eq_cards) == 1, "expected exactly one Equipment entities card"
-    rows = eq_cards[0]["entities"]
-    names = {row["name"] for row in rows}
+    headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
+    assert headings.index("Weather") < headings.index("Equipment") < headings.index("Capture")
+    names = {c.get("name") for c in cards if c.get("type") == "tile"}
     assert {"Camera", "Mount", "Focuser", "Guider"}.issubset(names)
 
 
@@ -71,7 +67,24 @@ async def test_build_dashboard_config_equipment_inline_actions(hass):
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
     headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
-    assert headings.index("Status") < headings.index("Capture") < headings.index("Dangerous")
+    order = [
+        "Last image",
+        "Shooting",
+        "Sensor",
+        "Mount",
+        "Guiding",
+        "Focuser",
+        "Weather",
+        "Equipment",
+        "Capture",
+        "Dangerous",
+    ]
+    indexes = [headings.index(name) for name in order]
+    assert indexes == sorted(indexes)
+    pictures = [c for c in cards if c.get("type") == "picture-entity"]
+    assert pictures
+    assert pictures[0]["name"] == "Latest image"
+    assert cards.index(pictures[0]) < cards.index(next(c for c in cards if c.get("heading") == "Last image"))
     action_tiles = [c for c in cards if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")]
     joined = " ".join(c["entity"] for c in action_tiles)
     assert "park" in joined and "connect" in joined
@@ -80,7 +93,7 @@ async def test_build_dashboard_config_equipment_inline_actions(hass):
     start = next(c for c in action_tiles if c.get("name") == "Start sequence")
     assert "confirmation" not in start["tap_action"]
     widths = {c["grid_options"]["columns"] for c in action_tiles}
-    assert widths == {6}
+    assert widths == {3}
 
 
 @pytest.mark.usefixtures("mock_config_entry")
@@ -92,9 +105,10 @@ async def test_build_dashboard_monitoring_camera_inserted_when_option_set(hass, 
     object.__setattr__(mock_config_entry, "options", {"monitoring_camera_entity": "camera.obs_cam"})
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
-    assert any(c.get("type") == "picture-entity" and c.get("entity") == "camera.obs_cam" for c in cards)
-    headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
-    assert "Monitoring" in headings
+    monitoring = next(c for c in cards if c.get("type") == "picture-entity" and c.get("entity") == "camera.obs_cam")
+    assert monitoring["name"] == "Monitoring"
+    latest = next(c for c in cards if c.get("type") == "picture-entity" and c.get("name") == "Latest image")
+    assert cards.index(latest) < cards.index(monitoring)
 
 
 @pytest.mark.usefixtures("mock_config_entry")

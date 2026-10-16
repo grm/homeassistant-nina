@@ -231,12 +231,15 @@ The sidebar entry is always **NINA**. Telescope names live in the menu (or as th
 
 ### Cards in each view
 
-Each telescope view is a single column, top to bottom, on a 12-column grid so tiles and buttons share the same widths:
+Each telescope view is a stack of full-width bands, so the tiles use the width of the screen instead of sitting in one narrow column:
 
-- **Status** — sequence, target, safety, tracking, parked, exposing, then the equipment connection list
-- **Camera / Last image / Mount / Guiding / Focuser / Weather** — the latest frame, image metrics (refreshed on `IMAGE-SAVE`), pointing, a 2-hour guiding graph, focus, and weather. Status tiles are three per row
-- **Capture** — start sequence, plate solve, autofocus, start guiding, unpark, open shutter, and the connect buttons. Two equal-width buttons per row
-- **Dangerous** — stop sequence, abort exposure, park, stop guiding, close shutter, park dome, and every disconnect. Same two-per-row grid, and each button asks for confirmation before it runs
+- **Latest image** — the current frame, across the top. A configured monitoring camera sits beside it
+- **Last image** — HFR, stars, filter, exposure, guiding RMS and the other frame stats (refreshed on `IMAGE-SAVE`), six per row
+- **Shooting** — sequence, target and whether an exposure is running
+- **Sensor, Mount, Guiding, Focuser, Weather** — cooler and sensor temperature, pointing, a 2-hour guiding graph, focus, then weather
+- **Equipment** — connected / disconnected for every device, as tiles on the same grid
+- **Capture** — start sequence, plate solve, autofocus, start guiding, unpark, open shutter, and the connect buttons, four per row
+- **Dangerous** — stop sequence, abort exposure, park, stop guiding, close shutter, park dome, and every disconnect. Same grid, and each button asks for confirmation before it runs
 
 Action buttons grey out on their own when the matching device is offline.
 

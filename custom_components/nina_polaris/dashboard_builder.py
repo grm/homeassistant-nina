@@ -176,10 +176,12 @@ def _section(title: str, *bodies: dict[str, Any]) -> list[dict[str, Any]]:
 DASHBOARD_URL_PATH = "nina"
 MENU_PATH = "home"
 
-# Section grid is always 12 columns. Status tiles are 3-up; actions are 2-up
-# so every button in a row has the same width.
-_STATUS_COLUMNS = 4
-_ACTION_COLUMNS = 6
+# A sections view with max_columns 1 stays one narrow column and leaves the
+# rest of the screen empty. Every band spans the full view instead.
+# The section grid is 12 columns: info tiles are six across, actions four.
+_VIEW_COLUMNS = 4
+_TILE_COLUMNS = 2
+_ACTION_COLUMNS = 3
 
 
 def _with_grid(card: dict[str, Any], columns: int, rows: int | None = None) -> dict[str, Any]:
@@ -216,7 +218,7 @@ def _status_tile(
     *,
     icon: str,
     color: str | None = None,
-    columns: int = _STATUS_COLUMNS,
+    columns: int = _TILE_COLUMNS,
 ) -> dict[str, Any]:
     return _with_grid(
         _tile(entity_id, name, icon=icon, color=color, vertical=True),
@@ -252,7 +254,7 @@ def _tiles_for(
     ents: dict[str, str],
     layout: list[tuple[str, str, str, str | None]],
     *,
-    columns: int = _STATUS_COLUMNS,
+    columns: int = _TILE_COLUMNS,
 ) -> list[dict[str, Any]]:
     return [
         _status_tile(ents[key], label, icon=icon, color=color, columns=columns)
@@ -273,6 +275,11 @@ def _actions_for(
     ]
 
 
+def _band(cards: list[dict[str, Any]]) -> dict[str, Any]:
+    """One full-width section. column_span fills the view so tiles aren't stuck in a narrow column."""
+    return {"type": "grid", "column_span": _VIEW_COLUMNS, "cards": cards}
+
+
 def _build_view(
     hass: HomeAssistant,
     entry_id: str,
@@ -281,97 +288,18 @@ def _build_view(
 ) -> dict[str, Any]:
     """Build one Lovelace view for a single NINA instance.
 
-    One column, top to bottom:
+    Full-width bands, top to bottom:
 
-      1. Status — session state, equipment, image, mount, guiding, weather
-      2. Capture — start / connect / solve actions, two equal buttons per row
-      3. Dangerous — stop, park, abort, disconnect, each with a confirmation
+      1. Latest image
+      2. Last image metrics
+      3. What is currently being shot
+      4. Sensor, mount, guiding, focuser, weather
+      5. Which equipment is connected
+      6. Capture actions, then dangerous actions with confirmation
     """
     label = _instance_label(hass, entry_id)
     ents = _entities_for_entry(hass, entry_id)
-    status: list[dict[str, Any]] = []
-
-    monitoring_entity = _monitoring_camera_entity(hass, entry_id)
-    if monitoring_entity:
-        status.append(_heading("Monitoring"))
-        status.append(
-            _with_grid(
-                {
-                    "type": "picture-entity",
-                    "entity": monitoring_entity,
-                    "show_state": False,
-                    "show_name": False,
-                    "camera_view": "live",
-                },
-                12,
-                rows=4,
-            )
-        )
-
-    glance: list[dict[str, Any]] = []
-    if "sequence_running" in ents:
-        glance.append(_status_tile(ents["sequence_running"], "Sequence", icon="mdi:play-circle", color="green"))
-    if "sequence_target" in ents:
-        glance.append(
-            _status_tile(
-                ents["sequence_target"],
-                "Target",
-                icon="mdi:bullseye-arrow",
-                color="indigo",
-                columns=8 if "sequence_running" in ents else 12,
-            )
-        )
-    if "safety_is_safe" in ents:
-        glance.append(_status_tile(ents["safety_is_safe"], "Safe", icon="mdi:shield-check", color="green"))
-    if "mount_tracking" in ents:
-        glance.append(_status_tile(ents["mount_tracking"], "Tracking", icon="mdi:target", color="green"))
-    if "mount_at_park" in ents:
-        glance.append(_status_tile(ents["mount_at_park"], "Parked", icon="mdi:parking", color="amber"))
-    if "camera_exposing" in ents:
-        glance.append(_status_tile(ents["camera_exposing"], "Exposing", icon="mdi:camera-iris", color="amber"))
-    if glance:
-        status.append(_heading("Status"))
-        status.extend(glance)
-
-    connect_keys: list[tuple[str, str]] = [
-        ("camera_connected", "Camera"),
-        ("mount_connected", "Mount"),
-        ("focuser_connected", "Focuser"),
-        ("guider_connected", "Guider"),
-        ("filterwheel_connected", "Filter wheel"),
-        ("rotator_connected", "Rotator"),
-        ("dome_connected", "Dome"),
-        ("weather_connected", "Weather"),
-        ("safety_monitor_connected", "Safety monitor"),
-    ]
-    connect_rows = [{"entity": ents[key], "name": lbl} for key, lbl in connect_keys if key in ents]
-    if connect_rows:
-        status.append(_heading("Equipment", style="subtitle"))
-        if use_mushroom:
-            status.append(
-                _with_grid(
-                    {
-                        "type": "custom:mushroom-chips-card",
-                        "chips": [
-                            {"type": "entity", "entity": row["entity"], "icon_color": "blue", "content_info": "name"}
-                            for row in connect_rows
-                        ],
-                    },
-                    12,
-                )
-            )
-        else:
-            status.append(
-                _with_grid(
-                    {
-                        "type": "entities",
-                        "show_header_toggle": False,
-                        "state_color": True,
-                        "entities": connect_rows,
-                    },
-                    12,
-                )
-            )
+    bands: list[dict[str, Any]] = []
 
     registry = er.async_get(hass)
     cam_eid = None
@@ -379,45 +307,117 @@ def _build_view(
         if entry.platform == DOMAIN and entry.config_entry_id == entry_id and entry.domain == Platform.CAMERA:
             cam_eid = entry.entity_id
             break
-    if cam_eid:
-        status.append(_heading("Camera", style="subtitle"))
-        status.append(_with_grid(_picture_entity(cam_eid, "Latest image"), 12, rows=5))
 
-    camera_layout: list[tuple[str, str, str, str | None]] = [
-        ("camera_temperature", "Sensor", "mdi:thermometer", "cyan"),
-        ("camera_cooler_power", "Cooler power", "mdi:snowflake", "light-blue"),
-        ("camera_cooler_on", "Cooler", "mdi:snowflake-thermometer", "blue"),
-    ]
-    status.extend(_tiles_for(ents, camera_layout))
+    pictures: list[dict[str, Any]] = []
+    monitoring_entity = _monitoring_camera_entity(hass, entry_id)
+    if cam_eid and monitoring_entity:
+        pictures.append(_with_grid(_picture_entity(cam_eid, "Latest image"), 8, rows=6))
+        pictures.append(
+            _with_grid(
+                {
+                    "type": "picture-entity",
+                    "entity": monitoring_entity,
+                    "name": "Monitoring",
+                    "show_state": False,
+                    "show_name": True,
+                    "camera_view": "live",
+                },
+                4,
+                rows=6,
+            )
+        )
+    elif cam_eid:
+        pictures.append(_with_grid(_picture_entity(cam_eid, "Latest image"), 12, rows=6))
+    elif monitoring_entity:
+        pictures.append(
+            _with_grid(
+                {
+                    "type": "picture-entity",
+                    "entity": monitoring_entity,
+                    "name": "Monitoring",
+                    "show_state": False,
+                    "show_name": True,
+                    "camera_view": "live",
+                },
+                12,
+                rows=6,
+            )
+        )
+    if pictures:
+        # The latest image leads. A monitoring camera sits beside it and is
+        # labelled on the card, so a heading does not push the image down.
+        if monitoring_entity and not cam_eid:
+            pictures.insert(0, _heading("Monitoring"))
+        bands.append(_band(pictures))
 
-    last_image_layout: list[tuple[str, str, str, str | None]] = [
-        ("latest_image_hfr", "HFR", "mdi:star-four-points", "amber"),
-        ("latest_image_stars", "Stars", "mdi:star-shooting", "amber"),
-        ("latest_image_filter", "Filter", "mdi:filter", "indigo"),
-        ("latest_image_exposure_time", "Exposure", "mdi:timer-outline", "blue"),
-        ("latest_image_guiding_rms", "Guiding RMS", "mdi:crosshairs", "green"),
-        ("latest_image_temperature", "Sensor temp", "mdi:thermometer-low", "blue"),
-        ("latest_image_mean", "Mean", "mdi:sigma-lower", "blue-grey"),
-        ("latest_image_median", "Median", "mdi:sigma", "blue-grey"),
-        ("latest_image_stdev", "Std dev", "mdi:chart-bell-curve", "blue-grey"),
-    ]
-    last_image_tiles = _tiles_for(ents, last_image_layout)
+    last_image_tiles = _tiles_for(
+        ents,
+        [
+            ("latest_image_hfr", "HFR", "mdi:star-four-points", "amber"),
+            ("latest_image_stars", "Stars", "mdi:star-shooting", "amber"),
+            ("latest_image_filter", "Filter", "mdi:filter", "indigo"),
+            ("latest_image_exposure_time", "Exposure", "mdi:timer-outline", "blue"),
+            ("latest_image_guiding_rms", "Guiding RMS", "mdi:crosshairs", "green"),
+            ("latest_image_temperature", "Sensor temp", "mdi:thermometer-low", "blue"),
+            ("latest_image_mean", "Mean", "mdi:sigma-lower", "blue-grey"),
+            ("latest_image_median", "Median", "mdi:sigma", "blue-grey"),
+            ("latest_image_stdev", "Std dev", "mdi:chart-bell-curve", "blue-grey"),
+        ],
+    )
     if last_image_tiles:
-        status.append(_heading("Last image", style="subtitle"))
-        status.extend(last_image_tiles)
+        bands.append(_band([_heading("Last image"), *last_image_tiles]))
 
-    mount_layout: list[tuple[str, str, str, str | None]] = [
-        ("mount_ra", "RA", "mdi:axis-x-rotate-clockwise", "indigo"),
-        ("mount_dec", "Dec", "mdi:axis-y-rotate-clockwise", "indigo"),
-        ("mount_altitude", "Altitude", "mdi:angle-acute", "blue-grey"),
-        ("mount_azimuth", "Azimuth", "mdi:compass", "blue-grey"),
-        ("mount_time_to_flip", "Meridian flip", "mdi:timer-sand", "amber"),
-        ("mount_slewing", "Slewing", "mdi:rotate-orbit", "orange"),
-    ]
-    mount_tiles = _tiles_for(ents, mount_layout)
+    shooting: list[dict[str, Any]] = []
+    if "sequence_running" in ents:
+        shooting.append(
+            _status_tile(ents["sequence_running"], "Sequence", icon="mdi:play-circle", color="green", columns=3)
+        )
+    if "sequence_target" in ents:
+        shooting.append(
+            _status_tile(
+                ents["sequence_target"],
+                "Target",
+                icon="mdi:bullseye-arrow",
+                color="indigo",
+                columns=6 if "sequence_running" in ents else 9,
+            )
+        )
+    if "camera_exposing" in ents:
+        shooting.append(
+            _status_tile(ents["camera_exposing"], "Exposing", icon="mdi:camera-iris", color="amber", columns=3)
+        )
+    if "safety_is_safe" in ents:
+        shooting.append(_status_tile(ents["safety_is_safe"], "Safe", icon="mdi:shield-check", color="green", columns=3))
+    if shooting:
+        bands.append(_band([_heading("Shooting"), *shooting]))
+
+    sensor_tiles = _tiles_for(
+        ents,
+        [
+            ("camera_temperature", "Sensor", "mdi:thermometer", "cyan"),
+            ("camera_cooler_power", "Cooler power", "mdi:snowflake", "light-blue"),
+            ("camera_cooler_on", "Cooler", "mdi:snowflake-thermometer", "blue"),
+        ],
+        columns=4,
+    )
+    if sensor_tiles:
+        bands.append(_band([_heading("Sensor"), *sensor_tiles]))
+
+    mount_tiles = _tiles_for(
+        ents,
+        [
+            ("mount_ra", "RA", "mdi:axis-x-rotate-clockwise", "indigo"),
+            ("mount_dec", "Dec", "mdi:axis-y-rotate-clockwise", "indigo"),
+            ("mount_altitude", "Altitude", "mdi:angle-acute", "blue-grey"),
+            ("mount_azimuth", "Azimuth", "mdi:compass", "blue-grey"),
+            ("mount_time_to_flip", "Meridian flip", "mdi:timer-sand", "amber"),
+            ("mount_slewing", "Slewing", "mdi:rotate-orbit", "orange"),
+            ("mount_tracking", "Tracking", "mdi:target", "green"),
+            ("mount_at_park", "Parked", "mdi:parking", "amber"),
+        ],
+    )
     if mount_tiles:
-        status.append(_heading("Mount", style="subtitle"))
-        status.extend(mount_tiles)
+        bands.append(_band([_heading("Mount"), *mount_tiles]))
 
     guide_entities = [ents[k] for k in ("guider_ra_distance", "guider_dec_distance") if k in ents]
     guide_tiles = _tiles_for(
@@ -426,12 +426,16 @@ def _build_view(
             ("guider_ra_distance", "RA error", "mdi:arrow-left-right", "blue"),
             ("guider_dec_distance", "Dec error", "mdi:arrow-up-down", "amber"),
         ],
+        columns=6,
     )
+    guiding: list[dict[str, Any]] = []
     if guide_tiles or guide_entities:
-        status.append(_heading("Guiding", style="subtitle"))
-        status.extend(guide_tiles)
+        guiding.append(_heading("Guiding"))
+        guiding.extend(guide_tiles)
         if guide_entities:
-            status.append(_with_grid(_history_card("Guiding error (arcsec)", guide_entities, hours=2), 12, rows=4))
+            guiding.append(_with_grid(_history_card("Guiding error (arcsec)", guide_entities, hours=2), 12, rows=4))
+    if guiding:
+        bands.append(_band(guiding))
 
     focus_tiles = _tiles_for(
         ents,
@@ -439,10 +443,10 @@ def _build_view(
             ("focuser_position", "Position", "mdi:focus-field", "purple"),
             ("focuser_temperature", "Temperature", "mdi:thermometer", "cyan"),
         ],
+        columns=6,
     )
     if focus_tiles:
-        status.append(_heading("Focuser", style="subtitle"))
-        status.extend(focus_tiles)
+        bands.append(_band([_heading("Focuser"), *focus_tiles]))
 
     weather_tiles = _tiles_for(
         ents,
@@ -457,8 +461,41 @@ def _build_view(
         ],
     )
     if weather_tiles:
-        status.append(_heading("Weather", style="subtitle"))
-        status.extend(weather_tiles)
+        bands.append(_band([_heading("Weather"), *weather_tiles]))
+
+    connect_keys: list[tuple[str, str]] = [
+        ("camera_connected", "Camera"),
+        ("mount_connected", "Mount"),
+        ("focuser_connected", "Focuser"),
+        ("guider_connected", "Guider"),
+        ("filterwheel_connected", "Filter wheel"),
+        ("rotator_connected", "Rotator"),
+        ("dome_connected", "Dome"),
+        ("weather_connected", "Weather"),
+        ("safety_monitor_connected", "Safety monitor"),
+    ]
+    connect_rows = [{"entity": ents[key], "name": lbl} for key, lbl in connect_keys if key in ents]
+    if connect_rows:
+        if use_mushroom:
+            equipment: list[dict[str, Any]] = [
+                _heading("Equipment"),
+                _with_grid(
+                    {
+                        "type": "custom:mushroom-chips-card",
+                        "chips": [
+                            {"type": "entity", "entity": row["entity"], "icon_color": "blue", "content_info": "name"}
+                            for row in connect_rows
+                        ],
+                    },
+                    12,
+                ),
+            ]
+        else:
+            equipment = [
+                _heading("Equipment"),
+                *[_status_tile(row["entity"], row["name"], icon="mdi:lan-connect") for row in connect_rows],
+            ]
+        bands.append(_band(equipment))
 
     # Capture stays in the middle. Dangerous actions are a separate block at
     # the bottom and always ask before they run.
@@ -503,24 +540,20 @@ def _build_view(
         ],
     )
 
-    sections: list[dict[str, Any]] = []
-    if status:
-        sections.append({"type": "grid", "cards": status})
     if capture:
-        sections.append({"type": "grid", "cards": [_heading("Capture"), *capture]})
+        bands.append(_band([_heading("Capture"), *capture]))
     if danger:
-        sections.append({"type": "grid", "cards": [_heading("Dangerous"), *danger]})
+        bands.append(_band([_heading("Dangerous"), *danger]))
 
-    if not sections:
-        sections.append(
-            {
-                "type": "grid",
-                "cards": [
+    if not bands:
+        bands.append(
+            _band(
+                [
                     _markdown(
                         "_No NINA entities detected yet. Make sure NINA is running and the integration is connected._"
                     )
-                ],
-            }
+                ]
+            )
         )
 
     return {
@@ -528,8 +561,8 @@ def _build_view(
         "path": f"nina-{entry_id[:8]}",
         "icon": "mdi:telescope",
         "type": "sections",
-        "max_columns": 1,
-        "sections": sections,
+        "max_columns": _VIEW_COLUMNS,
+        "sections": bands,
     }
 
 
@@ -558,8 +591,8 @@ def _menu_view(views: list[dict[str, Any]]) -> dict[str, Any]:
         "path": MENU_PATH,
         "icon": "mdi:telescope",
         "type": "sections",
-        "max_columns": 1,
-        "sections": [{"type": "grid", "cards": [_heading("Telescopes"), *buttons]}],
+        "max_columns": _VIEW_COLUMNS,
+        "sections": [_band([_heading("Telescopes"), *buttons])],
     }
 
 
