@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-10-16
+
 ### Changed
 
 - **Latest image sits in the middle of a wide dashboard.** The frame is a half-width block with empty space on each side. On a phone it still uses the full width.
