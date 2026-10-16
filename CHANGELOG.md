@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-16
+
 ### Changed
 
 - **Dashboard layout.** Each telescope view is now one column: status at the top (sequence, target, equipment, image, mount, guiding, weather), capture actions in the middle, and dangerous actions at the bottom. Status tiles are three per row and action buttons are two per row, so they line up. Stop, park, abort, close shutter, and every disconnect ask for confirmation before they run.
