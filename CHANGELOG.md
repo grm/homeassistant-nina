@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-16
+
 ### Changed
 
 - **Dashboard bands use the full width.** The view is no longer a single narrow column. Order is now: latest image, last-image stats, what is currently being shot, sensor, mount, guiding, focuser, weather, then equipment connection. Capture and dangerous actions stay at the bottom, with confirmation on the dangerous ones. Info tiles are six per row and action buttons four per row.
