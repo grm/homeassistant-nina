@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Menu links for two telescopes opened the same one.** View paths used only the first 8 characters of the config entry id. Hubs added together share that prefix, so both rows (RC14 and TEC-140) navigated to RC14. Each link now uses the full id.
+
 ## [0.8.2] - 2026-10-16
 
 ### Changed

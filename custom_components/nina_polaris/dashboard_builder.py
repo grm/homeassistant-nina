@@ -9,6 +9,7 @@ optional; default output works with a fresh HA install.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntryState
@@ -48,6 +49,12 @@ def _entities_for_entry(hass: HomeAssistant, entry_id: str) -> dict[str, str]:
             key = unique[len(prefix) :]
             out[key] = entry.entity_id
     return out
+
+
+def _path_slug(value: str) -> str:
+    """Lowercase path fragment. The entry id after it keeps the path unique."""
+    slug = re.sub(r"[^a-z0-9]+", "-", value.strip().lower()).strip("-")
+    return slug or "nina"
 
 
 def _instance_label(hass: HomeAssistant, entry_id: str) -> str:
@@ -591,7 +598,10 @@ def _build_view(
 
     return {
         "title": label,
-        "path": f"nina-{entry_id[:8]}",
+        # The full entry id: two hubs created together share the first 8
+        # characters of their ULID, so a short prefix made both menu links
+        # open the same telescope.
+        "path": f"nina-{_path_slug(label)}-{entry_id}",
         "icon": "mdi:telescope",
         "type": "sections",
         "max_columns": _VIEW_COLUMNS,

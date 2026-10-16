@@ -174,6 +174,20 @@ async def test_build_dashboard_config_stacks_instances_in_a_menu(hass):
     assert [b["grid_options"]["columns"] for b in buttons] == [12, 12]
     assert buttons[0]["tap_action"]["navigation_path"] == f"/nina/{first['path']}"
     assert buttons[1]["tap_action"]["navigation_path"] == f"/nina/{second['path']}"
+    assert first["path"] != second["path"]
+
+
+async def test_menu_links_differ_when_entry_ids_share_a_prefix(hass):
+    """ULIDs created together share their first 8 characters. Paths must not."""
+    shared = "01M52VFS"
+    config = build_dashboard_config(
+        hass,
+        entry_ids=[shared + "RPVC6WJVEAC23NF8YG", shared + "X8XV4SBJQH9AQWDVY1"],
+    )
+    first, second = config["views"][1:]
+    assert first["path"] != second["path"]
+    buttons = [c for c in _all_cards(config["views"][0]) if c.get("type") == "button"]
+    assert buttons[0]["tap_action"]["navigation_path"] != buttons[1]["tap_action"]["navigation_path"]
 
 
 async def test_build_dashboard_config_no_instances(hass):
