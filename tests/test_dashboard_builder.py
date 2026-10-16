@@ -34,7 +34,8 @@ async def test_build_dashboard_config_has_one_view_per_instance(hass):
     view = config["views"][0]
     assert view["icon"] == "mdi:telescope"
     assert view["type"] == "sections"
-    # We expect a 3-column layout with at least 2 sections populated.
+    # Status, then capture, then dangerous actions — stacked, one column.
+    assert view["max_columns"] == 1
     assert len(view["sections"]) >= 2
     assert len(_all_cards(view)) >= 4
 
@@ -66,16 +67,20 @@ async def test_build_dashboard_config_equipment_uses_entities_card(hass):
 
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_build_dashboard_config_equipment_inline_actions(hass):
-    """A Controls section follows Equipment with action tiles."""
+    """Capture actions sit under status; dangerous ones confirm before they run."""
     config = build_dashboard_config(hass)
     cards = _all_cards(config["views"][0])
     headings = [c.get("heading") for c in cards if c.get("type") == "heading"]
-    assert "Equipment" in headings and "Controls" in headings
-    action_tile_entities = {
-        c.get("entity") for c in cards if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")
-    }
-    joined = " ".join(action_tile_entities)
+    assert headings.index("Status") < headings.index("Capture") < headings.index("Dangerous")
+    action_tiles = [c for c in cards if c.get("type") == "tile" and (c.get("entity") or "").startswith("button.")]
+    joined = " ".join(c["entity"] for c in action_tiles)
     assert "park" in joined and "connect" in joined
+    park = next(c for c in action_tiles if c.get("name") == "Park mount")
+    assert park["tap_action"]["confirmation"]["text"] == "Park the mount?"
+    start = next(c for c in action_tiles if c.get("name") == "Start sequence")
+    assert "confirmation" not in start["tap_action"]
+    widths = {c["grid_options"]["columns"] for c in action_tiles}
+    assert widths == {6}
 
 
 @pytest.mark.usefixtures("mock_config_entry")
@@ -108,6 +113,25 @@ async def test_build_dashboard_config_mushroom_chips(hass):
     assert any(c.get("type") == "custom:mushroom-chips-card" for c in cards)
     entities_titles = [c.get("title") for c in cards if c.get("type") == "entities"]
     assert "Equipment" not in entities_titles
+
+
+async def test_build_dashboard_config_stacks_instances_in_a_menu(hass):
+    """Several instances open from a menu, one telescope under the other."""
+    config = build_dashboard_config(hass, entry_ids=["aaaabbbbcccc", "ddddeeeeffff"])
+    assert config["title"] == "NINA Polaris"
+    views = config["views"]
+    assert len(views) == 3
+    menu, first, second = views
+    assert menu["path"] == "home"
+    assert menu.get("subview") is not True
+    assert first["subview"] is True
+    assert second["subview"] is True
+    assert first["back_path"] == "/nina/home"
+    buttons = [c for c in _all_cards(menu) if c.get("type") == "button"]
+    assert len(buttons) == 2
+    assert [b["grid_options"]["columns"] for b in buttons] == [12, 12]
+    assert buttons[0]["tap_action"]["navigation_path"] == f"/nina/{first['path']}"
+    assert buttons[1]["tap_action"]["navigation_path"] == f"/nina/{second['path']}"
 
 
 async def test_build_dashboard_config_no_instances(hass):

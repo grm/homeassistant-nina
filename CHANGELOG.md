@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dashboard layout.** Each telescope view is now one column: status at the top (sequence, target, equipment, image, mount, guiding, weather), capture actions in the middle, and dangerous actions at the bottom. Status tiles are three per row and action buttons are two per row, so they line up. Stop, park, abort, close shutter, and every disconnect ask for confirmation before they run.
+- **One sidebar entry for every NINA instance.** The dashboard is a single **NINA** item. With several integrations, the first view is a menu of telescopes stacked one under the other; each opens its own page. Reloading the integration removes the old per-instance sidebar entries.
+
 ### Documentation
 
-- **README**: add a dedicated *NINA setup (Advanced API plugin)* section walking through the plugin's *Options* panel: `API Enabled` (single toggle that turns on the v2 REST + websocket endpoints), `Create Thumbnails` (required for the live image preview), `API Port` 1888, CORS header, firewall, and `curl /v2/api/version` connectivity check. The Configuration and Troubleshooting sections now link back to it.
+- **README**: add a dedicated *NINA setup (Advanced API plugin)* section walking through the plugin's *Options* panel: `API Enabled` (single toggle that turns on the v2 REST + websocket endpoints), `Create Thumbnails` (required for the live image preview), `API Port` 1888, CORS header, firewall, and `curl /v2/api/version` connectivity check. The Configuration and Troubleshooting sections now link back to it. The dashboard section describes the shared menu and the new layout.
 
 ## [0.7.1] - 2026-05-25
 

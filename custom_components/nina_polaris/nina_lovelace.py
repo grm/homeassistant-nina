@@ -1,8 +1,9 @@
-"""Auto-registered Lovelace dashboards for NINA Polaris.
+"""Auto-registered Lovelace dashboard for NINA Polaris.
 
-For every loaded NINA Polaris config entry we register **one** Lovelace
-dashboard with its own sidebar entry. The sidebar title is the instance
-name as configured in the integration (e.g. "Trevinca", "TEC140").
+One sidebar entry ("NINA") covers every loaded config entry. With a single
+instance the dashboard opens straight on that telescope. With several, the
+first view is a menu of telescopes stacked one under the other, and each
+telescope is a subview.
 
 The dashboard config is rebuilt on every page load from the entity
 registry — same pattern as the built-in Energy / Map dashboards, except
@@ -27,11 +28,12 @@ from homeassistant.components.lovelace.const import (
     MODE_STORAGE,
 )
 from homeassistant.components.lovelace.dashboard import LovelaceConfig
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes, json_fragment
 
-from .dashboard_builder import _instance_label, build_dashboard_config
+from .const import DOMAIN
+from .dashboard_builder import DASHBOARD_URL_PATH, build_dashboard_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,21 +60,20 @@ def _url_path_for(entry: ConfigEntry) -> str:
     return f"{URL_PREFIX}{_slugify(label)}-{entry.entry_id[:8]}"
 
 
-class NinaInstanceLovelaceConfig(LovelaceConfig):
-    """Lovelace config for a single NINA Polaris instance."""
+class NinaLovelaceConfig(LovelaceConfig):
+    """Lovelace config covering every loaded NINA Polaris instance."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url_path: str) -> None:
-        self._entry_id = entry.entry_id
+    def __init__(self, hass: HomeAssistant, url_path: str) -> None:
         super().__init__(
             hass,
             url_path,
             {
                 CONF_URL_PATH: url_path,
-                CONF_TITLE: entry.title or "NINA",
+                CONF_TITLE: "NINA",
                 CONF_ICON: DEFAULT_ICON,
                 CONF_REQUIRE_ADMIN: False,
                 CONF_SHOW_IN_SIDEBAR: True,
-                "id": f"nina_polaris_{entry.entry_id}",
+                "id": "nina_polaris",
                 "mode": MODE_STORAGE,
             },
         )
@@ -86,11 +87,15 @@ class NinaInstanceLovelaceConfig(LovelaceConfig):
         return {"mode": "generated", "views": len(config.get("views", []))}
 
     async def async_load(self, force: bool) -> dict[str, Any]:
-        """Build a fresh single-view dashboard from the registry."""
-        return build_dashboard_config(self.hass, entry_id=self._entry_id)
+        """Build a fresh dashboard from the registry (one view, or a menu)."""
+        return build_dashboard_config(self.hass)
 
     async def async_json(self, force: bool) -> json_fragment:
         return json_fragment(json_bytes(await self.async_load(force)))
+
+
+# Kept so reloads of older installs can still be type-checked by name.
+NinaInstanceLovelaceConfig = NinaLovelaceConfig
 
 
 # --------------------------------------------------------------------------- #
@@ -107,9 +112,24 @@ def _get_dashboards_dict(hass: HomeAssistant) -> dict[str, Any] | None:
     return getattr(lovelace_data, "dashboards", None)
 
 
+def _drop_panel(hass: HomeAssistant, url_path: str) -> None:
+    dashboards = _get_dashboards_dict(hass)
+    if dashboards is not None:
+        dashboards.pop(url_path, None)
+    with suppress(KeyError):
+        frontend.async_remove_panel(hass, url_path)
+
+
 @callback
 def async_register_instance_dashboard(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Register a per-instance dashboard + sidebar entry for one config entry."""
+    """Ensure the shared NINA dashboard exists and drop this entry's old panel.
+
+    Releases before 0.8 registered one sidebar item per config entry
+    (`nina-<slug>-<id>`). Those panels are removed here so a reload collapses
+    them into the single NINA menu.
+    """
+    _drop_panel(hass, _url_path_for(entry))
+
     dashboards = _get_dashboards_dict(hass)
     if dashboards is None:
         _LOGGER.warning(
@@ -118,50 +138,41 @@ def async_register_instance_dashboard(hass: HomeAssistant, entry: ConfigEntry) -
         )
         return
 
-    url_path = _url_path_for(entry)
-
-    if url_path in dashboards:
-        # Already registered (integration reload).
-        _LOGGER.debug("Dashboard %s already registered", url_path)
+    if DASHBOARD_URL_PATH in dashboards:
+        _LOGGER.debug("Dashboard %s already registered", DASHBOARD_URL_PATH)
         return
 
-    # Use the user-configured entry title (config flow title) — that's what
-    # users expect to see in the sidebar (e.g. "Trevinca", "TEC140"). Fall
-    # back to the device name only if the entry has no title.
-    sidebar_title = entry.title or _instance_label(hass, entry.entry_id)
-
-    dashboards[url_path] = NinaInstanceLovelaceConfig(hass, entry, url_path)
+    dashboards[DASHBOARD_URL_PATH] = NinaLovelaceConfig(hass, DASHBOARD_URL_PATH)
 
     try:
         frontend.async_register_built_in_panel(
             hass,
             component_name=LOVELACE_DOMAIN,
-            sidebar_title=sidebar_title,
+            sidebar_title="NINA",
             sidebar_icon=DEFAULT_ICON,
-            frontend_url_path=url_path,
+            frontend_url_path=DASHBOARD_URL_PATH,
             config={"mode": MODE_STORAGE},
             require_admin=False,
             update=False,
         )
     except ValueError:
-        _LOGGER.debug("Frontend panel %s already registered", url_path)
+        _LOGGER.debug("Frontend panel %s already registered", DASHBOARD_URL_PATH)
         return
 
-    _LOGGER.info(
-        "Registered NINA Polaris dashboard '%s' at /%s (auto-generated)",
-        sidebar_title,
-        url_path,
-    )
+    _LOGGER.info("Registered NINA Polaris dashboard at /%s (auto-generated)", DASHBOARD_URL_PATH)
 
 
 @callback
 def async_unregister_instance_dashboard(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Tear down a per-instance dashboard when its entry is unloaded."""
-    url_path = _url_path_for(entry)
+    """Drop a legacy per-entry panel, and the shared dashboard when none remain."""
+    _drop_panel(hass, _url_path_for(entry))
 
-    dashboards = _get_dashboards_dict(hass)
-    if dashboards is not None:
-        dashboards.pop(url_path, None)
+    others = [
+        other
+        for other in hass.config_entries.async_entries(DOMAIN)
+        if other.entry_id != entry.entry_id and other.state is ConfigEntryState.LOADED
+    ]
+    if others:
+        return
 
-    with suppress(KeyError):
-        frontend.async_remove_panel(hass, url_path)
+    _drop_panel(hass, DASHBOARD_URL_PATH)

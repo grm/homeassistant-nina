@@ -31,7 +31,7 @@ Long imaging nights, longer debugging nights — if this integration keeps **you
 - **Toggleable controls** — camera cooler (on / off), mount tracking (sidereal / stopped)
 - **Auto-generated dashboard** — a NINA Polaris dashboard appears in your sidebar automatically, rebuilt from your registry on every page load (no service to run, no JS, no custom cards)
 - WebSocket push for instant event updates + REST polling fallback
-- Multi-instance support (multiple NINA setups, each gets its own dashboard view)
+- Multi-instance support (several NINA setups share one sidebar entry; each telescope is a row in a menu)
 - French and English translations
 
 ## Requirements
@@ -219,29 +219,26 @@ automation:
 
 ## Dashboard
 
-NINA Polaris **automatically registers one Lovelace dashboard per configured NINA instance**. No service to call, no JS, no custom cards — each instance appears in your sidebar with **its own entry, named after the active NINA profile** (e.g. *Trevinca*, *TEC140*, *FRA400*).
+NINA Polaris **registers a single Lovelace dashboard** named **NINA**. No service to call, no JS, no custom cards. With one NINA instance the dashboard opens straight on it. With several, the first view is a menu: each telescope is a full-width row, one under the other, and opens its own page (a Lovelace subview, with a back button to the menu). The row label is the config entry title (the active NINA profile name, e.g. *Trevinca*, *TEC140*, *FRA400*).
 
-The dashboards are **regenerated on every page load** from your current entity registry, so adding/removing entities or NINA instances is reflected immediately — just reopen the dashboard.
+The dashboard is **regenerated on every page load** from your current entity registry, so adding or removing entities or NINA instances is reflected immediately — just reopen the dashboard.
 
 > Pattern: same approach as the built-in **Energy** and **Map** dashboards. Implemented as a `LovelaceConfig` subclass that rebuilds itself on every `async_load()`.
 
 ### Sidebar naming
 
-The sidebar entry uses the **config entry title**, which defaults to the active NINA profile name fetched at config flow time. To change it after the fact, rename the hub in *Settings → Devices & Services → ⋮ → Rename* on the NINA Polaris integration card.
+The sidebar entry is always **NINA**. Telescope names live in the menu (or as the view title when you only have one instance). To rename a telescope, rename the hub in *Settings → Devices & Services → ⋮ → Rename* on that NINA Polaris integration card.
 
 ### Cards in each view
 
-The view uses HA's responsive `sections` layout: **3 columns on desktop, 1 column on mobile**. Sections are organized so the user-facing reading order matches a typical imaging session...[truncated]
+Each telescope view is a single column, top to bottom, on a 12-column grid so tiles and buttons share the same widths:
 
-- **Equipment** — connection state of every NINA device (camera, mount, guider, focuser, filter wheel, rotator, dome, weather, safety monitor) **with inline action tiles per device**: connect/disconnect, plus device-specific actions (mount park/unpark, focuser autofocus, guider start/stop, dome open/close, camera abort exposure). Action tiles auto-grey-out when the device is offline.
-- **Camera** — latest image (`picture-entity`) + Sensor temp / Cooler power / Cooler / Exposing tiles
-- **Last image** — HFR, Stars, Filter, Exposure, Guiding RMS, Sensor temp, Mean, Median, Std dev — refreshed automatically when NINA saves a new frame (`IMAGE-SAVE` websocket event)
-- **Mount** — RA, Dec, Altitude, Azimuth, Meridian flip, Tracking, Slewing tiles + a Park/Unpark row (Parked state + Park button + Unpark button on a single horizontal line)
-- **Guiding** — RA error / Dec error tiles + a 2-hour history graph
-- **Focuser** — Position / Temperature tiles
-- **Sequence** — full-width **Current target** tile + Running tile + Start / Stop action tiles
-- **Weather** — Temp, Humidity, Pressure, Dew point, Wind, SQM, Sky temp tiles (3-column grid)
-- **Safety** — Safe-to-image tile
+- **Status** — sequence, target, safety, tracking, parked, exposing, then the equipment connection list
+- **Camera / Last image / Mount / Guiding / Focuser / Weather** — the latest frame, image metrics (refreshed on `IMAGE-SAVE`), pointing, a 2-hour guiding graph, focus, and weather. Status tiles are three per row
+- **Capture** — start sequence, plate solve, autofocus, start guiding, unpark, open shutter, and the connect buttons. Two equal-width buttons per row
+- **Dangerous** — stop sequence, abort exposure, park, stop guiding, close shutter, park dome, and every disconnect. Same two-per-row grid, and each button asks for confirmation before it runs
+
+Action buttons grey out on their own when the matching device is offline.
 
 ### Optional: Mushroom chips
 

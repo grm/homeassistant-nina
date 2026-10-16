@@ -51,7 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
 
-    # Register a per-instance dashboard with its own sidebar entry.
+    # Register the shared NINA dashboard (one sidebar entry, a menu when
+    # several instances are loaded).
     # Wrapped so a Lovelace API change can never block the integration.
     try:
         async_register_instance_dashboard(hass, entry)
@@ -77,7 +78,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: NinaConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Unload a config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # Drop this entry's sidebar dashboard.
+    # Drop this entry from the shared dashboard (removes it when it was the last).
     try:
         async_unregister_instance_dashboard(hass, entry)
     except Exception:  # noqa: BLE001
